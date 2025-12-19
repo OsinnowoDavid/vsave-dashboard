@@ -65,7 +65,7 @@ function WaitList() {
   };
 
   const features = [
-    { icon: '💰', title: 'Smart Savings', desc: 'Automated savings plans with high-interest returns' },
+    { icon: '💰', title: 'Smart Savings', desc: 'Automated daily savings solution' },
     { icon: '🏦', title: 'Quick Loans', desc: 'Instant loans with competitive rates' },
     { icon: '📱', title: 'Airtime & Data', desc: 'Buy airtime and data bundles instantly' },
     { icon: '🎫', title: 'Lottery Wallet', desc: 'Fund and manage your lottery tickets' },
