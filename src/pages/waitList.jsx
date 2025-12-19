@@ -224,7 +224,7 @@ function WaitList() {
                         onChange={handleChange}
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
                       >
-                        <option value="savings">Savings & Investments</option>
+                        <option value="savings">Savings </option>
                         <option value="loans">Quick Loans</option>
                         <option value="airtime">Airtime & Data</option>
                         <option value="lottery">Lottery Wallet</option>
