@@ -6,6 +6,7 @@ import WalletManagement from "./pages/walletManagement"
 import Login from "./pages/Login"
 import WaitList from "./pages/waitList"
 import React from "react"
+
 function App() {
 
   return (
