@@ -11,3 +11,16 @@ import axios from "axios"
         
     }
 }
+
+ export const GetWaitListDetails = async()=>{
+    try {
+    const response = await axios.get("https://vsavebackend-31d8.onrender.com/user/get-all-waitlist" )
+    return response
+
+        
+    } catch (error) {
+        console.log(error)
+        
+    }
+}
+

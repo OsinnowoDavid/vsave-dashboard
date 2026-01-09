@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import Vsave from "../assets/vsave.png";
 import { waitList } from "../api/waitList.jsx";
 
+
+
 function WaitList() {
+
+
   // ✅ FIXED: State keys match the input names
   const [formData, setFormData] = useState({
     fullName: '',

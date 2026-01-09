@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import Vsave from "../assets/vsave.png";
 import { Eye, EyeOff, LogIn, Shield, Mail, Lock } from 'lucide-react';
-// import Link from "react-router-dom"
-// import { useNavigate } from 'react-router-dom';
+import useAuthStore from '../store/useAuthStore';
+import { Link, useNavigate } from 'react-router-dom';
+
 function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -10,24 +11,41 @@ function Login() {
     password: ''
   });
   const [isLoading, setIsLoading] = useState(false);
-// const navigate = useNavigate()
+  const [error, setError] = useState('');
+  
+  const { login } = useAuthStore();
+  const navigate = useNavigate();
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+    // Clear error when user starts typing
+    if (error) setError('');
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      // Handle login logic here
-    }, 1500);
-    // navigate("/manageSavings")
+    
+    try {
+      console.log("FORM", formData.email, formData.password);
+      const response = await login(formData.email, formData.password);
+      console.log("Login-Response", response);
 
+      if(response.success=== true)(
+        navigate("/over-view")
+      )
+    
+      
+    } catch (error) {
+      console.log("Login error:", error);
+      setError(error.message || 'Login failed. Please check your credentials.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -43,7 +61,7 @@ function Login() {
         <div className="text-center mb-8">
           <div className="flex items-center justify-center space-x-4 mb-6">
             <div className="relative">
-              <div className="absolute inset-0  rounded-xl blur-sm"></div>
+              <div className="absolute inset-0 rounded-xl blur-sm"></div>
               <img 
                 src={Vsave} 
                 className="w-20 h-20 relative z-10 drop-shadow-lg" 
@@ -77,7 +95,14 @@ function Login() {
               <p className="text-emerald-200 text-sm">Enter your credentials to access the dashboard</p>
             </div>
 
-            <form className="space-y-6">
+            {/* Error Message */}
+            {error && (
+              <div className="mb-6 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <p className="text-red-300 text-sm text-center">{error}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-6">
               {/* Email Field */}
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-white mb-2">
@@ -96,6 +121,7 @@ function Login() {
                     onChange={handleChange}
                     className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200"
                     placeholder="admin@vsave.com"
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -118,11 +144,13 @@ function Login() {
                     onChange={handleChange}
                     className="w-full pl-10 pr-12 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-200"
                     placeholder="Enter your password"
+                    disabled={isLoading}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-emerald-300 hover:text-white transition-colors duration-200"
+                    disabled={isLoading}
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
@@ -135,34 +163,35 @@ function Login() {
                   <input
                     type="checkbox"
                     className="w-4 h-4 text-emerald-600 bg-white/5 border-white/20 rounded focus:ring-emerald-500 focus:ring-offset-slate-900"
+                    disabled={isLoading}
                   />
                   <span className="ml-2 text-sm text-emerald-200">Remember me</span>
                 </label>
-                <a href="#" className="text-sm text-green-300 hover:text-green-200 transition-colors duration-200 font-medium">
-                  Forgot password?
-                </a>
+                <Link
+                to={"/changePassword"}
+                  type="button"
+                  className="text-sm text-green-300 hover:text-green-200 transition-colors duration-200 font-medium disabled:text-green-400/50"
+                  disabled={isLoading}
+                >
+                  Change password
+                </Link>
               </div>
 
               {/* Submit Button */}
               <button
-              onSubmit={handleSubmit}
                 type="submit"
                 disabled={isLoading}
-                className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 disabled:from-emerald-400 disabled:to-green-400 text-white py-3 px-4 rounded-xl font-semibold shadow-lg transition-all duration-200 transform hover:scale-[1.02] disabled:scale-100 flex items-center justify-center space-x-2"
+                className="w-full bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 disabled:from-emerald-400 disabled:to-green-400 text-white py-3 px-4 rounded-xl font-semibold shadow-lg transition-all duration-200 transform hover:scale-[1.02] disabled:scale-100 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
               >
                 {isLoading ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                     <span>Authenticating...</span>
-
                   </>
                 ) : (
                   <>
                     <LogIn className="w-5 h-5" />
-                    {/* <Link href="/manageSavings"> */}
                     <span>Sign In to Dashboard</span>
-                    {/* </Link> */}
-
                   </>
                 )}
               </button>
@@ -172,7 +201,7 @@ function Login() {
           {/* Footer */}
           <div className="bg-black/20 border-t border-white/10 px-8 py-4">
             <p className="text-center text-emerald-300 text-xs">
-             VSave Admin. Restricted access only.
+              VSave Admin. Restricted access only.
             </p>
           </div>
         </div>

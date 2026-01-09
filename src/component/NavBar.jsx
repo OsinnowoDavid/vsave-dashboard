@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import Vsave from "../assets/vsave.png"
+import { Link } from 'react-router-dom';
 
 const Header = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -29,29 +30,20 @@ const Header = () => {
 
         {/* Desktop Action Buttons */}
         <div className="hidden lg:flex absolute right-4 xl:right-0 top-1/2 bottom-1/2 translate-y-1 items-center gap-2">
-          <button className="flex items-center justify-center px-3 xl:px-4 py-3 h-10 border-[1.5px] border-[#1B8A52] rounded-xl hover:bg-[#1B8A52]/10 transition-colors">
+          <Link  to={"/createSavings"} className="flex items-center justify-center px-3 xl:px-4 py-3 h-10 border-[1.5px] border-[#1B8A52] rounded-xl hover:bg-[#1B8A52]/10 transition-colors">
             <span className="text-sm font-semibold text-[#1B8A52] whitespace-nowrap">
               Create Savings
             </span>
-          </button>
+          </Link >
 
-          <button className="flex items-center justify-center px-3 xl:px-4 py-3 h-10 border-[1.5px] border-[#1B8A52] rounded-xl hover:bg-[#1B8A52]/10 transition-colors">
-            <span className="text-sm font-semibold text-[#1B8A52] whitespace-nowrap">
-              Manage Plans
-            </span>
-          </button>
 
-          <button className="flex items-center justify-center px-3 xl:px-4 py-3 h-10 border-[1.5px] border-[#1B8A52] rounded-xl hover:bg-[#1B8A52]/10 transition-colors">
+          <Link to={"/create-admin"} className="flex items-center justify-center px-3 xl:px-4 py-3 h-10 border-[1.5px] border-[#1B8A52] rounded-xl hover:bg-[#1B8A52]/10 transition-colors">
             <span className="text-sm font-semibold text-[#1B8A52] whitespace-nowrap">
-              Transaction History
-            </span>
-          </button>
+              Create admin
 
-          <button className="flex items-center justify-center px-3 xl:px-4 py-3 h-10 border-[1.5px] border-[#1B8A52] rounded-xl hover:bg-[#1B8A52]/10 transition-colors">
-            <span className="text-sm font-semibold text-[#1B8A52] whitespace-nowrap">
-              Export Data
             </span>
-          </button>
+          </Link>
+
         </div>
       </div>
 

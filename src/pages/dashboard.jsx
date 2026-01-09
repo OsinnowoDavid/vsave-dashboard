@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Wallet, ArrowDownToLine, Smartphone, Receipt, TrendingUp, CreditCard, Search, ChevronDown, Eye } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Wallet, ArrowDownToLine, Smartphone, Receipt, TrendingUp, CreditCard, Search, ChevronDown, Eye, Loader2, AlertCircle } from 'lucide-react';
 import NavBar from "../component/NavBar";
 import Sidebar from '../component/SideBar';
+import { getData } from '../api/admin';
 
 const StatCard = ({ icon: Icon, iconBg, iconColor, label, value, details }) => (
   <article 
@@ -48,74 +49,10 @@ const StatCard = ({ icon: Icon, iconBg, iconColor, label, value, details }) => (
 );
 
 const Dashboard = () => {
-  const statsRow1 = [
-    {
-      id: 1,
-      icon: Wallet,
-      iconBg: 'rgba(93, 135, 239, 0.17)',
-      iconColor: '#5D87EF',
-      label: 'Total Wallet Funding',
-      value: 'N125,116,980',
-      details: [
-        { label: 'Online:', value: 'N123,777,000' },
-        { label: 'Offline:', value: 'N1,339,980' }
-      ]
-    },
-    {
-      id: 2,
-      icon: ArrowDownToLine,
-      iconBg: 'rgba(93, 135, 239, 0.17)',
-      iconColor: '#5D87EF',
-      label: 'Total Withdrawal',
-      value: 'N125,116,980',
-      details: [
-        { label: 'Online:', value: 'N123,777,000' },
-        { label: 'Offline:', value: 'N1,339,980' }
-      ]
-    },
-    {
-      id: 3,
-      icon: Smartphone,
-      iconBg: 'rgba(93, 135, 239, 0.17)',
-      iconColor: '#5D87EF',
-      label: 'Airtime & Data Volume',
-      value: 'N125,116,980',
-      details: [
-        { label: 'Airtime:', value: 'N85,777,000' },
-        { label: 'Data:', value: 'N39,339,980' }
-      ]
-    },
-  ];
-
-  const statsRow2 = [
-    {
-      id: 4,
-      icon: Receipt,
-      iconBg: 'rgba(93, 135, 239, 0.17)',
-      iconColor: '#5D87EF',
-      label: 'Stamp Duty Revenue',
-      value: 'N50',
-      details: []
-    },
-    {
-      id: 5,
-      icon: TrendingUp,
-      iconBg: 'rgba(37, 195, 95, 0.17)',
-      iconColor: '#25C35F',
-      label: 'Liability SquadCo (0.025%)',
-      value: 'N75.860',
-      details: []
-    },
-    {
-      id: 6,
-      icon: CreditCard,
-      iconBg: 'rgba(193, 61, 138, 0.17)',
-      iconColor: '#C13D8A',
-      label: 'External Transfer Fees',
-      value: 'N125,000',
-      details: []
-    },
-  ];
+  const [stats, setStats] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [apiData, setApiData] = useState(null);
 
   // Filter items data
   const filterItems = [
@@ -187,7 +124,118 @@ const Dashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeFilter, setActiveFilter] = useState('All');
 
-  // Filter logic
+  // Fetch data from API
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await getData();
+      
+      // Based on your API response structure
+      if (response && response.data && response.data.data) {
+        const apiStats = response.data.data;
+        setApiData(apiStats);
+        
+        // Format the stats for display
+        const formattedStats = [
+          {
+            id: 1,
+            icon: Wallet,
+            iconBg: 'rgba(93, 135, 239, 0.17)',
+            iconColor: '#5D87EF',
+            label: 'Total Wallet Funding',
+            value: `₦${formatNumber(apiStats.totalWalletFund || 0)}`,
+            details: [
+              // { label: 'Online:', value: `₦${formatNumber(apiStats.onlineWalletFund || 0)}` },
+              // { label: 'Offline:', value: `₦${formatNumber(apiStats.offlineWalletFund || 0)}` }
+              // If API doesn't provide breakdown, we can show just the total
+            ]
+          },
+          {
+            id: 2,
+            icon: ArrowDownToLine,
+            iconBg: 'rgba(93, 135, 239, 0.17)',
+            iconColor: '#5D87EF',
+            label: 'Total Withdrawal',
+            value: `₦${formatNumber(apiStats.totalWithdrawal || 0)}`,
+            details: [
+              // { label: 'Online:', value: `₦${formatNumber(apiStats.onlineWithdrawal || 0)}` },
+              // { label: 'Offline:', value: `₦${formatNumber(apiStats.offlineWithdrawal || 0)}` }
+            ]
+          },
+          {
+            id: 3,
+            icon: Smartphone,
+            iconBg: 'rgba(93, 135, 239, 0.17)',
+            iconColor: '#5D87EF',
+            label: 'Airtime & Data Volume',
+            value: `₦${formatNumber(apiStats.totalAirtimeAndData || 0)}`,
+            details: [
+              // { label: 'Airtime:', value: `₦${formatNumber(apiStats.airtimeVolume || 0)}` },
+              // { label: 'Data:', value: `₦${formatNumber(apiStats.dataVolume || 0)}` }
+            ]
+          },
+        ];
+        
+        setStats(formattedStats);
+      } else {
+        throw new Error('Invalid API response structure');
+      }
+      
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      setError(error.message || 'Failed to load dashboard data');
+      
+      // Fallback to default stats if API fails
+      const defaultStats = [
+        {
+          id: 1,
+          icon: Wallet,
+          iconBg: 'rgba(93, 135, 239, 0.17)',
+          iconColor: '#5D87EF',
+          label: 'Total Wallet Funding',
+          value: '₦0',
+          details: []
+        },
+        {
+          id: 2,
+          icon: ArrowDownToLine,
+          iconBg: 'rgba(93, 135, 239, 0.17)',
+          iconColor: '#5D87EF',
+          label: 'Total Withdrawal',
+          value: '₦0',
+          details: []
+        },
+        {
+          id: 3,
+          icon: Smartphone,
+          iconBg: 'rgba(93, 135, 239, 0.17)',
+          iconColor: '#5D87EF',
+          label: 'Airtime & Data Volume',
+          value: '₦0',
+          details: []
+        },
+      ];
+      setStats(defaultStats);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  // Helper function to format numbers
+  const formatNumber = (num) => {
+    return new Intl.NumberFormat('en-NG', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2
+    }).format(num);
+  };
+
+  // Filter logic for table
   const filteredData = tableData.filter(item => {
     const matchesSearch = item.user.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          item.circleId.toLowerCase().includes(searchTerm.toLowerCase());
@@ -204,9 +252,28 @@ const Dashboard = () => {
   // Handle view details
   const handleViewDetails = (item) => {
     console.log('Viewing details for:', item);
-    // Add your view details logic here
     alert(`Viewing details for ${item.user} (${item.circleId})`);
   };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <NavBar />
+        <div className="flex pt-16">
+          <div className="fixed left-0 top-5 h-[calc(100vh-4rem)] z-30">
+            <Sidebar />
+          </div>
+          <main className="flex-1 ml-72 min-h-screen flex items-center justify-center">
+            <div className="flex flex-col items-center">
+              <Loader2 className="h-12 w-12 text-emerald-600 animate-spin mb-4" />
+              <p className="text-gray-600">Loading dashboard data...</p>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -225,12 +292,26 @@ const Dashboard = () => {
             {/* Page Title */}
             <div className="mb-6 sm:mb-8 lg:mb-10 mt-10 ml-5">
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900">
-                Dashboard Overview
+                Savings Dashboard 
               </h1>
               <p className="text-sm sm:text-base text-gray-600 mt-2">
-                Welcome to your admin dashboard
+                
               </p>
             </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="mb-6 ml-5 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center">
+                <AlertCircle className="h-5 w-5 text-red-500 mr-3" />
+                <span className="text-red-700">{error}</span>
+                <button
+                  onClick={fetchData}
+                  className="ml-auto text-sm text-red-600 hover:text-red-800"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
 
             {/* Stats Grid */}
             <div className="flex flex-col gap-6 lg:gap-8 mb-8 lg:mb-12">
@@ -238,33 +319,61 @@ const Dashboard = () => {
               <section aria-labelledby="financial-stats">
                 <h2 id="financial-stats" className="sr-only">Financial Statistics</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
-                  {statsRow1.map((stat) => (
+                  {stats.map((stat) => (
                     <StatCard key={stat.id} {...stat} />
                   ))}
                 </div>
               </section>
 
-              {/* Second Row */}
-              <section aria-labelledby="revenue-stats">
-                <h2 id="revenue-stats" className="sr-only">Revenue Statistics</h2>
+              {/* Additional Stats Row - You can add more stats here if needed */}
+              {/* <section aria-labelledby="additional-stats">
+                <h2 id="additional-stats" className="sr-only">Additional Statistics</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 lg:gap-8">
-                  {statsRow2.map((stat) => (
+                  {[
+                    {
+                      id: 4,
+                      icon: Receipt,
+                      iconBg: 'rgba(16, 185, 129, 0.17)',
+                      iconColor: '#10B981',
+                      label: 'Total Transactions',
+                      value: '1,234',
+                      details: []
+                    },
+                    {
+                      id: 5,
+                      icon: TrendingUp,
+                      iconBg: 'rgba(239, 68, 68, 0.17)',
+                      iconColor: '#EF4444',
+                      label: 'Active Users',
+                      value: '567',
+                      details: []
+                    },
+                    {
+                      id: 6,
+                      icon: CreditCard,
+                      iconBg: 'rgba(245, 158, 11, 0.17)',
+                      iconColor: '#F59E0B',
+                      label: 'Total Revenue',
+                      value: '₦8,456,789',
+                      details: []
+                    }
+                  ].map((stat) => (
                     <StatCard key={stat.id} {...stat} />
                   ))}
                 </div>
-              </section>
+              </section> */}
             </div>
 
             {/* Filter and Search Section */}
             <div className="flex flex-col gap-6 w-full mb-8">
               {/* Filter Tabs */}
-              <div className="flex flex-row items-center px-0 sm:px-8 gap-4 sm:gap-6 w-full h-14 border-y border-gray-200">
+              <div className="flex flex-row items-center px-0 sm:px-8 gap-4 sm:gap-6 w-full h-14 border-y border-gray-200 overflow-x-auto">
                 {filterItems.map((item, index) => (
                   <button
                     key={index}
                     onClick={() => setActiveFilter(item.label)}
-                    className={`flex flex-row items-center gap-1 sm:gap-2 cursor-pointer transition-colors ${
-                      activeFilter === item.label ? 'text-green-600' : 'text-gray-400 hover:text-gray-600'
+                    className={`flex flex-row items-center gap-1 sm:gap-2 cursor-pointer transition-colors whitespace-nowrap ${
+                      activeFilter === item.label ? 'text-green-600 border-b-2 border-green-600' : 'text-gray-400 hover:text-gray-600'
                     }`}
                   >
                     <span className={`text-sm sm:text-base font-normal leading-6 ${
@@ -285,7 +394,7 @@ const Dashboard = () => {
               </div>
 
               {/* Search and Filter Bar */}
-              <div className="flex flex-col sm:flex-row items-center px-0 sm:px-8 gap-4 sm:gap-6 w-full h-12 sm:h-12">
+              <div className="flex flex-col sm:flex-row items-center px-0 sm:px-8 gap-4 sm:gap-6 w-full">
                 {/* Search Input */}
                 <div className="flex flex-col gap-2 w-full sm:w-auto sm:flex-1 max-w-2xl">
                   <div className="flex flex-row items-center gap-3 px-3 w-full h-12 bg-gray-50 border border-gray-200 rounded-md">
@@ -324,23 +433,23 @@ const Dashboard = () => {
             {/* Data Table Section */}
             <div className="flex flex-col gap-6 w-full bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               {/* Table Header */}
-              <div className="flex flex-row items-center gap-12 w-full h-8 border-b border-gray-200 pb-4">
-                <div className="w-24">
+              <div className="flex flex-row items-center gap-12 w-full h-8 border-b border-gray-200 pb-4 overflow-x-auto">
+                <div className="w-24 min-w-24">
                   <span className="text-sm font-semibold text-black">Circle ID</span>
                 </div>
-                <div className="w-32">
+                <div className="w-32 min-w-32">
                   <span className="text-sm font-semibold text-gray-900">User</span>
                 </div>
-                <div className="w-24">
+                <div className="w-24 min-w-24">
                   <span className="text-sm font-semibold text-gray-900">Circle Type</span>
                 </div>
-                <div className="w-28">
+                <div className="w-28 min-w-28">
                   <span className="text-sm font-semibold text-gray-900">Daily Amount</span>
                 </div>
-                <div className="w-32">
+                <div className="w-32 min-w-32">
                   <span className="text-sm font-semibold text-gray-900">Total Saved</span>
                 </div>
-                <div className="w-24 text-right">
+                <div className="w-24 min-w-24 text-right">
                   <span className="text-sm font-semibold text-gray-900">Action</span>
                 </div>
               </div>
@@ -349,26 +458,26 @@ const Dashboard = () => {
               <div className="flex flex-col gap-4">
                 {filteredData.length > 0 ? (
                   filteredData.map((item) => (
-                    <div key={item.id} className="flex flex-row items-center gap-12 w-full h-6 py-4 border-b border-gray-100 last:border-b-0">
-                      <div className="w-24">
+                    <div key={item.id} className="flex flex-row items-center gap-12 w-full h-6 py-4 border-b border-gray-100 last:border-b-0 overflow-x-auto">
+                      <div className="w-24 min-w-24">
                         <span className="text-base font-normal text-gray-600">{item.circleId}</span>
                       </div>
-                      <div className="w-32">
+                      <div className="w-32 min-w-32">
                         <span className="text-base font-normal text-gray-600">{item.user}</span>
                       </div>
-                      <div className="w-24">
+                      <div className="w-24 min-w-24">
                         <span className="text-base font-normal text-gray-600">{item.circleType}</span>
                       </div>
-                      <div className="w-28">
+                      <div className="w-28 min-w-28">
                         <span className="text-base font-normal text-gray-600">{item.dailyAmount}</span>
                       </div>
-                      <div className="w-32">
+                      <div className="w-32 min-w-32">
                         <span className="text-base font-normal text-gray-600">{item.totalSaved}</span>
                       </div>
-                      <div className="w-32 ml-5 ">
+                      <div className="w-32 min-w-32 text-right">
                         <button
                           onClick={() => handleViewDetails(item)}
-                          className="flex   gap-3 text-green-600 hover:text-green-700 transition-colors text-base font-normal"
+                          className="flex items-center justify-end gap-2 text-green-600 hover:text-green-700 transition-colors text-base font-normal"
                         >
                           <Eye size={16} />
                           View details
@@ -383,14 +492,24 @@ const Dashboard = () => {
                 )}
               </div>
 
-              {/* Table Footer - Pagination can be added here */}
+              {/* Table Footer */}
               <div className="flex justify-between items-center pt-4 border-t border-gray-200">
                 <span className="text-sm text-gray-600">
                   Showing {filteredData.length} of {tableData.length} records
                 </span>
-                {/* Pagination buttons can be added here */}
+                {/* You can add pagination here if needed */}
               </div>
             </div>
+
+            {/* Raw API Data Display (for debugging - optional) */}
+            {/* {apiData && process.env.NODE_ENV === 'development' && (
+              <div className="mt-8 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h3 className="text-sm font-semibold text-gray-700 mb-2">API Data (Debug)</h3>
+                <pre className="text-xs text-gray-600 overflow-auto">
+                  {JSON.stringify(apiData, null, 2)}
+                </pre>
+              </div>
+            )} */}
           </div>
         </main>
       </div>
