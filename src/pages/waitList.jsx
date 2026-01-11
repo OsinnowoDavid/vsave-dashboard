@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Vsave from "../assets/vsave.png";
 import { waitList } from "../api/waitList.jsx";
-
+import { Link } from 'react-router-dom';
 
 
 function WaitList() {
@@ -310,8 +310,10 @@ function WaitList() {
           <div className=" md:flex-row justify-between items-center">
             <div className="mb-8 md:mb-0">
               <div className="flex items-center mb-4">
-                
+                <Link to={"/login"}>
                 <span className="text-2xl font-bold">VSave</span>
+
+                </Link>
               </div>
               <p className="text-gray-400">Your all-in-one financial companion</p>
             </div>
