@@ -360,6 +360,9 @@ function LoanManagement() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-green-800 uppercase tracking-wider">
                       Loan Details
                     </th>
+                       <th className="px-6 py-3 text-left text-xs font-medium text-green-800 uppercase tracking-wider">
+                      Email
+                    </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-green-800 uppercase tracking-wider">
                       Amount & Interest
                     </th>
@@ -372,9 +375,7 @@ function LoanManagement() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-green-800 uppercase tracking-wider">
                       Repayments
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-green-800 uppercase tracking-wider">
-                      Actions
-                    </th>
+                 
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -395,12 +396,30 @@ function LoanManagement() {
                               </div>
                               <div>
                                 <p className="font-medium text-gray-900">{loan.loanTitle || 'Untitled Loan'}</p>
-                                <p className="text-sm text-gray-500">ID: {loan._id?.slice(-8) || 'N/A'}</p>
+                                <p className="text-sm text-gray-500">Name: {loan.user.firstName?.slice(-8) || 'N/A'}  {loan.user.lastName?.slice(-8) || 'N/A'}</p>
                               </div>
                             </div>
                             <p className="text-sm text-gray-500 mt-1">
                               Created: {formatDate(loan.createdAt)}
                             </p>
+
+                          </div>
+                        </td>
+                          <td className="px-6 py-4">
+                          <div className="space-y-1">
+                            <div>
+                              <p className="text-sm text-gray-500">Principal</p>
+                              <p className="font-medium text-gray-900">{loan.user.email}</p>
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500">Phone Number {loan.user.phoneNumber || 0}</p>
+                            </div>
+                            {/* <div className="pt-1 border-t border-gray-100">
+                              <p className="text-sm text-gray-500">Total</p>
+                              <p className="font-medium text-green-700">
+                                {formatCurrency(loan.amount + (loan.interest || 0))}
+                              </p>
+                            </div> */}
                           </div>
                         </td>
                         <td className="px-6 py-4">
@@ -482,7 +501,7 @@ function LoanManagement() {
                             )}
                           </div>
                         </td>
-                        <td className="px-6 py-4">
+                        {/* <td className="px-6 py-4">
                           <div className="flex flex-col space-y-2">
                             <button
                               onClick={() => handleViewDetails(loan._id)}
@@ -500,7 +519,7 @@ function LoanManagement() {
                               </button>
                             )}
                           </div>
-                        </td>
+                        </td> */}
                       </tr>
                     ))
                   ) : (

@@ -373,9 +373,9 @@ function AdminDetails() {
     switch (role) {
       case 'SUPER ADMIN':
         return 'bg-purple-100 text-purple-800 border border-purple-200';
-      case 'ADMIN':
+      case 'REGIONAL ADMIN':
         return 'bg-blue-100 text-blue-800 border border-blue-200';
-      case 'MODERATOR':
+      case 'SUBREGIONAL ADMIN':
         return 'bg-indigo-100 text-indigo-800 border border-indigo-200';
       default:
         return 'bg-gray-100 text-gray-800 border border-gray-200';
@@ -442,14 +442,14 @@ function AdminDetails() {
               <div className="mt-4 md:mt-3 flex flex-wrap gap-3">
                 <button
                   onClick={() => setShowAddModal(true)}
-                  className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white px-4 py-2.5 rounded-lg font-medium flex items-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="bg-black hover:bg-green-600 text-white0 text-white px-4 py-2.5 rounded-lg font-medium flex items-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-200"
                 >
                   <Users className="w-5 h-5" />
                   <span>Add New Admin</span>
                 </button>
                 <Link 
                   to="/createRegion" 
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 py-2.5 rounded-lg font-medium flex items-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="bg-black hover:bg-green-600 text-white px-4 py-2.5 rounded-lg font-medium flex items-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-200"
                 >
                   <MapPin className="w-5 h-5" />
                   <span>Create Region</span>
@@ -492,16 +492,16 @@ function AdminDetails() {
                   iconColor: 'text-purple-600'
                 },
                 { 
-                  label: 'Active Admins', 
-                  value: admins.filter(a => a.status === 'active').length,
+                  label: 'Regional admin', 
+                  value: admins.filter(a => a.status === 'REGIONAL ADMIN').length,
                   icon: UserCheck, 
                   color: 'green',
                   bg: 'bg-green-50',
                   iconColor: 'text-green-600'
                 },
                 { 
-                  label: 'Inactive Admins', 
-                  value: admins.filter(a => a.status === 'inactive').length,
+                  label: 'Sub regional Admins', 
+                  value: admins.filter(a => a.status === 'SUBREGIONAL ADMIN').length,
                   icon: UserX, 
                   color: 'red',
                   bg: 'bg-red-50',
@@ -543,15 +543,19 @@ function AdminDetails() {
                 <div className="relative">
                   <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <select
-                    value={filterRole}
-                    onChange={(e) => setFilterRole(e.target.value)}
-                    className="pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 appearance-none bg-white min-w-[140px]"
-                  >
-                    <option value="all">All Roles</option>
-                    <option value="SUPER ADMIN">Super Admin</option>
-                    <option value="ADMIN">Admin</option>
-                    <option value="MODERATOR">Moderator</option>
-                  </select>
+  value={filterRole}
+  onChange={(e) => setFilterRole(e.target.value)}
+  className="pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg
+             focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500
+             appearance-none bg-white min-w-[140px]
+             accent-emerald-500"
+>
+  <option className='mouse-black' value="all">All Roles</option>
+  <option value="SUPER ADMIN">Super Admin</option>
+  <option value="REGIONAL ADMIN">Regional Admin</option>
+  <option value="SUBREGIONAL ADMIN">Sub Regional Admin</option>
+</select>
+
                 </div>
                 
                 <div className="relative">
@@ -702,7 +706,7 @@ function AdminDetails() {
                               <div className="flex flex-wrap gap-1">
                                 {Array.isArray(admin.region) && admin.region.length > 0 
                                   ? admin.region.slice(0, 2).map((region, index) => (
-                                      <span key={index} className="inline-block bg-blue-50 text-blue-700 text-xs px-2 py-1 rounded border border-blue-100 truncate max-w-[120px]">
+                                      <span key={index} className="inline-block bg-black text-white text-xs px-2 py-1 rounded border border-blue-100 truncate max-w-[120px]">
                                         {truncateText(region, 15)}
                                       </span>
                                     ))

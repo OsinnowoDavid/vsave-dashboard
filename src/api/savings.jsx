@@ -34,9 +34,9 @@ export const createSavings = async (formData) => {
 
 export const getUserSavings = async ()=>{
     try {
-    const response = await apiClient.get("/admin/get-all-loan")
+    const response = await apiClient.get("/admin/user-savings-record")
         console.log("user-savings-DATA", response)
-        return response
+        return response.data
     } catch (error) {
         console.log(error)
     }
@@ -45,9 +45,9 @@ export const getUserSavings = async ()=>{
 
 export const adminSavingsData = async ()=>{
     try {
-    const response = await apiClient.get("/admin/get-all-loan")
+    const response = await apiClient.get("/admin/all-admin-created-savings")
         console.log("admin-savings-DATA", response)
-        return response
+        return response.data
     } catch (error) {
         console.log(error)
     }
