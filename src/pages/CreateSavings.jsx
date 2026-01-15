@@ -154,6 +154,14 @@ const CreateSavingsPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    // SECURITY CHECK: Validate token exists
+    if (!token || token.trim() === '') {
+      toast.error('Authentication required. Please log in.');
+      // In a real app, you might want to redirect to login
+      // navigate('/login');
+      return;
+    }
+    
     const validationErrors = validateForm();
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
@@ -165,7 +173,7 @@ const CreateSavingsPage = () => {
     
     try {
       const loadingToast = toast.loading('Creating savings plan...');
-      const response = await createSavings(token, formData);
+      const response = await createSavings(formData); // Token is now handled internally by the API function
       
       toast.dismiss(loadingToast);
       
@@ -188,10 +196,18 @@ const CreateSavingsPage = () => {
         toast.error(errorMessage);
       }
     } catch (error) {
-      let errorMessage = 'Network error or unexpected issue. Please try again.';
-      if (error.response?.data?.message) errorMessage = error.response.data.message;
-      else if (error.message) errorMessage = error.message;
-      toast.error(errorMessage);
+      // Handle authentication errors specifically
+      if (error.response?.status === 401) {
+        toast.error('Session expired. Please log in again.');
+        // Clear invalid token and redirect (you'd need to implement this)
+        // useAuthStore.getState().clearToken();
+        // navigate('/login');
+      } else {
+        let errorMessage = 'Network error or unexpected issue. Please try again.';
+        if (error.response?.data?.message) errorMessage = error.response.data.message;
+        else if (error.message) errorMessage = error.message;
+        toast.error(errorMessage);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -211,10 +227,14 @@ const CreateSavingsPage = () => {
     toast.info('Form reset to default values!');
   };
 
-  // Log form data to console
+  // Log form data to console (development only)
   const handleLogData = () => {
-    console.log('Form data:', formData);
-    toast.info('Form data logged to console!');
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Form data:', formData);
+      toast.info('Form data logged to console!');
+    } else {
+      toast.info('Console logging is disabled in production.');
+    }
   };
 
   return (
@@ -273,6 +293,7 @@ const CreateSavingsPage = () => {
                               value={formData.subRegion}
                               onChange={handleChange}
                               className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 border ${errors.subRegion ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition duration-200 appearance-none text-sm sm:text-base`}
+                              aria-describedby={errors.subRegion ? "subRegion-error" : undefined}
                             >
                               <option value="">Select a sub-region</option>
                               {subRegions.map(region => (
@@ -287,7 +308,7 @@ const CreateSavingsPage = () => {
                               </svg>
                             </div>
                           </div>
-                          {errors.subRegion && <p className="mt-1 text-xs sm:text-sm text-red-600">{errors.subRegion}</p>}
+                          {errors.subRegion && <p id="subRegion-error" className="mt-1 text-xs sm:text-sm text-red-600">{errors.subRegion}</p>}
                         </div>
 
                         {/* Savings Title */}
@@ -303,8 +324,9 @@ const CreateSavingsPage = () => {
                             onChange={handleChange}
                             className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 border ${errors.savingsTitle ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition duration-200 text-sm sm:text-base`}
                             placeholder="Enter a descriptive title for your savings plan"
+                            aria-describedby={errors.savingsTitle ? "savingsTitle-error" : undefined}
                           />
-                          {errors.savingsTitle && <p className="mt-1 text-xs sm:text-sm text-red-600">{errors.savingsTitle}</p>}
+                          {errors.savingsTitle && <p id="savingsTitle-error" className="mt-1 text-xs sm:text-sm text-red-600">{errors.savingsTitle}</p>}
                         </div>
 
                         {/* Frequency */}
@@ -319,6 +341,7 @@ const CreateSavingsPage = () => {
                               value={formData.frequency}
                               onChange={(e) => handleSelectChange('frequency', e.target.value)}
                               className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 border ${errors.frequency ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition duration-200 appearance-none text-sm sm:text-base`}
+                              aria-describedby={errors.frequency ? "frequency-error" : undefined}
                             >
                               <option value="">Select frequency</option>
                               {frequencyOptions.map(option => (
@@ -333,7 +356,7 @@ const CreateSavingsPage = () => {
                               </svg>
                             </div>
                           </div>
-                          {errors.frequency && <p className="mt-1 text-xs sm:text-sm text-red-600">{errors.frequency}</p>}
+                          {errors.frequency && <p id="frequency-error" className="mt-1 text-xs sm:text-sm text-red-600">{errors.frequency}</p>}
                         </div>
 
                         {/* Savings Amount */}
@@ -355,9 +378,10 @@ const CreateSavingsPage = () => {
                               step="100"
                               className={`w-full pl-10 pr-3 py-2.5 sm:pl-10 sm:pr-4 sm:py-3 border ${errors.savingsAmount ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition duration-200 text-sm sm:text-base`}
                               placeholder="0"
+                              aria-describedby={errors.savingsAmount ? "savingsAmount-error" : undefined}
                             />
                           </div>
-                          {errors.savingsAmount && <p className="mt-1 text-xs sm:text-sm text-red-600">{errors.savingsAmount}</p>}
+                          {errors.savingsAmount && <p id="savingsAmount-error" className="mt-1 text-xs sm:text-sm text-red-600">{errors.savingsAmount}</p>}
                         </div>
 
                         {/* Deduction Period */}
@@ -372,6 +396,7 @@ const CreateSavingsPage = () => {
                               value={formData.deductionPeriod}
                               onChange={(e) => handleSelectChange('deductionPeriod', e.target.value)}
                               className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 border ${errors.deductionPeriod ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition duration-200 appearance-none text-sm sm:text-base`}
+                              aria-describedby={errors.deductionPeriod ? "deductionPeriod-error" : undefined}
                             >
                               <option value="">Select deduction period</option>
                               {getDeductionPeriodOptions().map(option => (
@@ -386,7 +411,7 @@ const CreateSavingsPage = () => {
                               </svg>
                             </div>
                           </div>
-                          {errors.deductionPeriod && <p className="mt-1 text-xs sm:text-sm text-red-600">{errors.deductionPeriod}</p>}
+                          {errors.deductionPeriod && <p id="deductionPeriod-error" className="mt-1 text-xs sm:text-sm text-red-600">{errors.deductionPeriod}</p>}
                         </div>
 
                         {/* Duration */}
@@ -405,6 +430,7 @@ const CreateSavingsPage = () => {
                               max="365"
                               className={`w-full px-3 py-2.5 sm:px-4 sm:py-3 border ${errors.duration ? 'border-red-300' : 'border-gray-300'} rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition duration-200 text-sm sm:text-base`}
                               placeholder="Number of periods"
+                              aria-describedby={errors.duration ? "duration-error" : undefined}
                             />
                             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                               <span className="text-gray-500 text-xs sm:text-sm">
@@ -414,7 +440,7 @@ const CreateSavingsPage = () => {
                               </span>
                             </div>
                           </div>
-                          {errors.duration && <p className="mt-1 text-xs sm:text-sm text-red-600">{errors.duration}</p>}
+                          {errors.duration && <p id="duration-error" className="mt-1 text-xs sm:text-sm text-red-600">{errors.duration}</p>}
                         </div>
                       </div>
 
@@ -424,6 +450,7 @@ const CreateSavingsPage = () => {
                           type="button"
                           onClick={handleReset}
                           className="px-4 py-2.5 sm:px-6 sm:py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition duration-200 w-full sm:w-auto text-sm sm:text-base"
+                          aria-label="Reset form to default values"
                         >
                           Reset to Default
                         </button>
@@ -433,6 +460,7 @@ const CreateSavingsPage = () => {
                             type="button"
                             onClick={handleLogData}
                             className="px-4 py-2.5 sm:px-6 sm:py-3 border border-emerald-600 text-emerald-600 font-medium rounded-lg hover:bg-emerald-50 transition duration-200 w-full sm:w-auto text-sm sm:text-base"
+                            aria-label="Log form data to console (development only)"
                           >
                             Log Data
                           </button>
@@ -441,6 +469,7 @@ const CreateSavingsPage = () => {
                             type="submit"
                             disabled={isSubmitting}
                             className={`px-5 py-2.5 sm:px-8 sm:py-3 font-medium rounded-lg transition duration-200 w-full sm:w-auto text-sm sm:text-base ${isSubmitting ? 'bg-emerald-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}`}
+                            aria-label={isSubmitting ? "Creating savings plan..." : "Create savings plan"}
                           >
                             {isSubmitting ? (
                               <span className="flex items-center justify-center">

@@ -194,7 +194,7 @@ export const updateAdminProfile = async (updateData) => { // Changed function na
       throw new Error("Update data is required and must be an object");
     }
     
-    const response = await apiClient.put("/admin/update", updateData); // Added updateData as request body
+    const response = await apiClient.post("/admin/update", updateData); // Added updateData as request body
     return response.data; // Return the data
   } catch (error) {
     console.error("Error updating admin profile:", error);

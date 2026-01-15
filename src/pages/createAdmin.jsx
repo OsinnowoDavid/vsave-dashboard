@@ -306,7 +306,7 @@ const CreateAdminForm = () => {
         </div>
         
         {/* Main content area */}
-        <main className="flex-1 lg:ml-64">
+        <main className="flex-1 ">
           <div className="max-w-4xl mx-auto px-2 sm:px-0">
             <div className="mb-4 sm:mb-6 md:mb-8">
               <div className="flex items-center space-x-2 sm:space-x-3">
@@ -393,9 +393,8 @@ const CreateAdminForm = () => {
                     onChange={handleChange}
                     options={[
                       { value: 'SUPER ADMIN', label: 'Super Administrator' },
-                      { value: 'Admin', label: 'Administrator' },
-                      { value: 'regionAdmin', label: 'Regional Admin' },
-                      { value: 'agent', label: 'Agent' }
+                      { value: 'SUBREGIONAL ADMIN', label: 'Sub-Regional admin' },
+                      { value: 'REGIONAL ADMIN', label: 'Regional admin' }
                     ]}
                     error={errors.role}
                     required

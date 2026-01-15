@@ -1,35 +1,19 @@
 import apiClient from "./apiClient";
 
-export const createSavings = async (   subRegion,
-      savingsTitle,
-      frequency,
-      savingsAmount,
-      deductionPeriod,
-      duration
-    ) => {
-console.log(subRegion,
-      savingsTitle,
-      frequency,
-      savingsAmount,
-      deductionPeriod,
-      duration)
+export const createSavings = async (formData) => {
+  console.log('Creating savings plan with data:', formData);
+  
   try {
-
     // Use relative path since apiClient already has baseURL
     const response = await apiClient.post(
-      "/savings/create-savingsplan" , // Relative path only
-      subRegion,
-      savingsTitle,
-      frequency,
-      savingsAmount,
-      deductionPeriod,
-      duration
- // Single data object
+      "/savings/create-savingsplan", // Relative path only
+      formData // Pass the entire formData object as the request body
     );
     
     console.log("API Response:", response);
     
     return {
+      success: true,
       data: response.data,
       message: response.data.message || "Savings created successfully",
       status: response.status
@@ -40,8 +24,32 @@ console.log(subRegion,
     
     // Return error object instead of throwing
     return {
-      error: error.response?.data?.message || error.message,
-      status: error.response?.status
+      success: false,
+      error: error.response?.data?.message || error.message || "Failed to create savings plan",
+      status: error.response?.status,
+      data: error.response?.data
     };
   }
 };
+
+export const getUserSavings = async ()=>{
+    try {
+    const response = await apiClient.get("/admin/get-all-loan")
+        console.log("user-savings-DATA", response)
+        return response
+    } catch (error) {
+        console.log(error)
+    }
+
+}
+
+export const adminSavingsData = async ()=>{
+    try {
+    const response = await apiClient.get("/admin/get-all-loan")
+        console.log("admin-savings-DATA", response)
+        return response
+    } catch (error) {
+        console.log(error)
+    }
+
+}

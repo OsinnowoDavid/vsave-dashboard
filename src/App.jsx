@@ -20,7 +20,8 @@ import { ToastContainer } from 'react-toastify';
 import NotFound from "./pages/NotFound"
 import Settings from "./pages/Settings"
 import 'react-toastify/dist/ReactToastify.css';
-
+import LoanManagement from "./pages/LoanManagement"
+import SavingsManagement from "./pages/SavingsManagement"
 function App() {
   const checkAuth = useAuthStore()
   console.log("auth", checkAuth)
@@ -50,7 +51,7 @@ function App() {
 
 
 {/* private routes */}
-  <Route path="/manageSavings"  element= { checkAuth.token ?(<Dashboard/>) : (<NotAuthenticatedLoginPage/>)}/>
+  <Route path="/manageSavings"  element= { checkAuth.token ?(<SavingsManagement/>) : (<NotAuthenticatedLoginPage/>)}/>
   <Route path="/admin-details"  element={ checkAuth.token ?(<AdminDetails/>) : (<NotAuthenticatedLoginPage/>)}/>
   <Route path="/create-admin"  element={ checkAuth.token ?(<AdminProfile/>) : (<NotAuthenticatedLoginPage/>)}/>
   <Route path="/createSavings"  element={ checkAuth.token ?(<CreateSavingsPage/>) : (<NotAuthenticatedLoginPage/>)}/>
@@ -59,6 +60,7 @@ function App() {
   <Route path="/createRegion"  element={ checkAuth.token ?(<CreateRegion/>) : (<NotAuthenticatedLoginPage/>)}/>
   <Route path="/WalletManagement"  element={ checkAuth.token ?(<WalletManagement/>) : (<NotAuthenticatedLoginPage/>)}/>
   <Route path="/over-view"  element={ checkAuth.token ?(<OverView/>) : (<NotAuthenticatedLoginPage/>)}/>
+  <Route path="/loans"  element={ checkAuth.token ?(<LoanManagement/>) : (<NotAuthenticatedLoginPage/>)}/>
     {/* 404 Route - MUST be at the end */}
         <Route path="*" element={<NotFound/>}/>
 </Routes>

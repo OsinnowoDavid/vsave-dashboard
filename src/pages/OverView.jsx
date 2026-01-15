@@ -426,7 +426,7 @@ const OverView = () => {
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                          {filteredUsers.map((user) => (
+                          {filteredUsers.reverse().map((user) => (
                             <tr key={user.id} className="hover:bg-gray-50 transition-colors duration-150">
                               
                               <td className="px-6 py-4 whitespace-nowrap">
