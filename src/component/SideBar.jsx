@@ -199,9 +199,9 @@ const Sidebar = ({ isOpen, onClose }) => {
                 </h3>
                 <p className="text-xs text-gray-400 truncate">{user?.user?.role || 'Super Admin'}</p>
               </div>
-              <button className="p-2 hover:bg-gray-800 rounded-lg transition-colors">
+              {/* <button className="p-2 hover:bg-gray-800 rounded-lg transition-colors">
                 <Bell className="w-4 h-4 text-gray-400 hover:text-white" />
-              </button>
+              </button> */}
             </div>
           </div>
         )}
