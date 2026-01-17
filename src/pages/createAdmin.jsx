@@ -296,14 +296,12 @@ const CreateAdminForm = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-emerald-50 p-3 sm:p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <Header />
       
-      <div className="flex flex-col lg:flex-row mt-16 md:mt-20">
         {/* Sidebar - Hidden on mobile, shown on desktop */}
-        <div className="hidden lg:block">
+        <div className="flex">
           <Sidebar />
-        </div>
         
         {/* Main content area */}
         <main className="flex-1 ">

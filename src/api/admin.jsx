@@ -226,8 +226,11 @@ export const getData = async()=>{
   }
 }
 
-export const deleteAdmin = async()=>{
+export const deleteAdmin = async(id)=>{
   try {
+    const response = await apiClient.delete("/admin/"+id)
+    console.log(response)
+    return response
     
   } catch (error) {
     
@@ -235,7 +238,9 @@ export const deleteAdmin = async()=>{
 }
 export const updateAdmin = async()=>{
   try {
-    
+     const response = await apiClient.post("")
+    console.log(response)
+    return response
   } catch (error) {
     
   }

@@ -158,8 +158,7 @@ function AdminDetails() {
         phoneNumber: editForm.phoneNumber,
         role: editForm.role,
         status: editForm.status,
-        region: editForm.region,
-        subRegion: editForm.subRegion
+
       };
       
       await updateAdmin(selectedAdmin._id, updateData);
@@ -269,42 +268,42 @@ function AdminDetails() {
   };
 
   // Handle region selection for forms
-  const handleRegionSelect = (region, formType = 'edit') => {
-    if (formType === 'edit') {
-      setEditForm(prev => ({
-        ...prev,
-        region: prev.region.includes(region)
-          ? prev.region.filter(r => r !== region)
-          : [...prev.region, region]
-      }));
-    } else {
-      setAddForm(prev => ({
-        ...prev,
-        region: prev.region.includes(region)
-          ? prev.region.filter(r => r !== region)
-          : [...prev.region, region]
-      }));
-    }
-  };
+  // const handleRegionSelect = (region, formType = 'edit') => {
+  //   if (formType === 'edit') {
+  //     setEditForm(prev => ({
+  //       ...prev,
+  //       region: prev.region.includes(region)
+  //         ? prev.region.filter(r => r !== region)
+  //         : [...prev.region, region]
+  //     }));
+  //   } else {
+  //     setAddForm(prev => ({
+  //       ...prev,
+  //       region: prev.region.includes(region)
+  //         ? prev.region.filter(r => r !== region)
+  //         : [...prev.region, region]
+  //     }));
+  //   }
+  // };
 
   // Handle subregion selection for forms
-  const handleSubRegionSelect = (subRegion, formType = 'edit') => {
-    if (formType === 'edit') {
-      setEditForm(prev => ({
-        ...prev,
-        subRegion: prev.subRegion.includes(subRegion)
-          ? prev.subRegion.filter(sr => sr !== subRegion)
-          : [...prev.subRegion, subRegion]
-      }));
-    } else {
-      setAddForm(prev => ({
-        ...prev,
-        subRegion: prev.subRegion.includes(subRegion)
-          ? prev.subRegion.filter(sr => sr !== subRegion)
-          : [...prev.subRegion, subRegion]
-      }));
-    }
-  };
+  // const handleSubRegionSelect = (subRegion, formType = 'edit') => {
+  //   if (formType === 'edit') {
+  //     setEditForm(prev => ({
+  //       ...prev,
+  //       subRegion: prev.subRegion.includes(subRegion)
+  //         ? prev.subRegion.filter(sr => sr !== subRegion)
+  //         : [...prev.subRegion, subRegion]
+  //     }));
+  //   } else {
+  //     setAddForm(prev => ({
+  //       ...prev,
+  //       subRegion: prev.subRegion.includes(subRegion)
+  //         ? prev.subRegion.filter(sr => sr !== subRegion)
+  //         : [...prev.subRegion, subRegion]
+  //     }));
+  //   }
+  // };
 
   // Filter and search logic
   const filteredAdmins = admins.filter(admin => {
@@ -971,7 +970,7 @@ function AdminDetails() {
                 </div>
 
                 {/* Regions Selection */}
-                <div className="mb-6">
+                {/* <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-3">
                     Regions
                   </label>
@@ -994,10 +993,10 @@ function AdminDetails() {
                       </button>
                     ))}
                   </div>
-                </div>
+                </div> */}
 
                 {/* Sub-regions Selection */}
-                <div className="mb-6">
+                {/* <div className="mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-3">
                     Sub-regions
                   </label>
@@ -1020,7 +1019,7 @@ function AdminDetails() {
                       </button>
                     ))}
                   </div>
-                </div>
+                </div> */}
 
                 <div className="flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-200">
                   <button
