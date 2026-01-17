@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Wallet, ArrowDownToLine, Smartphone, Receipt, TrendingUp, CreditCard, Search, ChevronDown, Eye, Loader2, AlertCircle, Users, Calendar, FileDown } from 'lucide-react';
 import NavBar from "../component/NavBar";
 import Sidebar from '../component/SideBar';
@@ -59,6 +59,10 @@ const OverView = () => {
   const [apiData, setApiData] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [exporting, setExporting] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Fetch dashboard stats data
   const fetchData = async () => {
@@ -154,7 +158,7 @@ const OverView = () => {
     try {
       setUsersLoading(true);
       const response = await GetUsers();
-      console.log("user",response)
+      console.log("user", response)
 
       
       // Check different possible response structures
@@ -220,6 +224,78 @@ const OverView = () => {
     } catch (error) {
       return 'Invalid Date';
     }
+  };
+
+  // Filter users based on search term
+  const filteredUsers = useMemo(() => {
+    return users.filter(user => {
+      return (
+        user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.phoneNumber.includes(searchTerm) ||
+        user.userId.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }).reverse(); // Reverse to show latest first
+  }, [users, searchTerm]);
+
+  // Calculate pagination values
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, filteredUsers.length);
+  const currentUsers = filteredUsers.slice(startIndex, endIndex);
+
+  // Pagination handlers
+  const handlePageChange = (pageNumber) => {
+    if (pageNumber >= 1 && pageNumber <= totalPages) {
+      setCurrentPage(pageNumber);
+    }
+  };
+
+  const handleItemsPerPageChange = (e) => {
+    const newItemsPerPage = parseInt(e.target.value);
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1); // Reset to first page when changing items per page
+  };
+
+  // Generate page numbers for pagination controls
+  const getPageNumbers = () => {
+    const pageNumbers = [];
+    const maxVisiblePages = 5;
+    
+    if (totalPages <= maxVisiblePages) {
+      // Show all pages
+      for (let i = 1; i <= totalPages; i++) {
+        pageNumbers.push(i);
+      }
+    } else {
+      // Show limited pages with ellipsis
+      if (currentPage <= 3) {
+        // Near the beginning
+        for (let i = 1; i <= 4; i++) {
+          pageNumbers.push(i);
+        }
+        pageNumbers.push('...');
+        pageNumbers.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        // Near the end
+        pageNumbers.push(1);
+        pageNumbers.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) {
+          pageNumbers.push(i);
+        }
+      } else {
+        // In the middle
+        pageNumbers.push(1);
+        pageNumbers.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) {
+          pageNumbers.push(i);
+        }
+        pageNumbers.push('...');
+        pageNumbers.push(totalPages);
+      }
+    }
+    
+    return pageNumbers;
   };
 
   // Export users to CSV
@@ -289,21 +365,10 @@ const OverView = () => {
     exportToCSV(users, `all_users_${new Date().toISOString().split('T')[0]}.csv`);
   };
 
-  // Filter users based on search term
-  const filteredUsers = users.filter(user => {
-    return (
-      user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.phoneNumber.includes(searchTerm) ||
-      user.userId.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  });
-
-  // Handle view user details
-  const handleViewUserDetails = (user) => {
-    console.log('Viewing user details:', user);
-    // You can implement a modal or navigate to user details page
-    alert(`Viewing details for ${user.fullName}\nEmail: ${user.email}\nPhone: ${user.phoneNumber}`);
+  // Reset search and pagination
+  const handleResetSearch = () => {
+    setSearchTerm('');
+    setCurrentPage(1);
   };
 
   // Loading state
@@ -401,7 +466,7 @@ const OverView = () => {
                   <p className="text-gray-600 mt-2">Manage and monitor all user accounts</p>
                 </div>
                 <div className="text-sm text-gray-500">
-                  {usersLoading ? 'Loading users...' : `${users.length} users found`}
+                  {usersLoading ? 'Loading users...' : `${users.length} total users`}
                 </div>
               </div>
 
@@ -415,13 +480,26 @@ const OverView = () => {
                         type="text"
                         placeholder="Search users by name, email, or phone..."
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={(e) => {
+                          setSearchTerm(e.target.value);
+                          setCurrentPage(1); // Reset to first page on search
+                        }}
                         className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
                       />
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-3">
+                    {/* Reset Search Button */}
+                    {searchTerm && (
+                      <button 
+                        className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 flex items-center space-x-2"
+                        onClick={handleResetSearch}
+                      >
+                        <span>Clear Search</span>
+                      </button>
+                    )}
+
                     {/* Export Buttons */}
                     <div className="relative group">
                       <button 
@@ -457,7 +535,10 @@ const OverView = () => {
 
                     <button 
                       className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 flex items-center space-x-2"
-                      onClick={fetchUsers}
+                      onClick={() => {
+                        fetchUsers();
+                        setCurrentPage(1);
+                      }}
                       disabled={usersLoading}
                     >
                       {usersLoading ? (
@@ -512,7 +593,7 @@ const OverView = () => {
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                          {filteredUsers.reverse().map((user) => (
+                          {currentUsers.map((user) => (
                             <tr key={user.id} className="hover:bg-gray-50 transition-colors duration-150">
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex items-center">
@@ -555,27 +636,79 @@ const OverView = () => {
                       </table>
                     </div>
 
-                    {/* Table Footer */}
+                    {/* Table Footer with Pagination */}
                     <div className="bg-gray-50 px-6 py-4 border-t border-gray-200">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">
-                          Showing {filteredUsers.length} of {users.length} users
-                        </span>
+                      <div className="flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0">
+                        {/* Items per page selector */}
                         <div className="flex items-center space-x-2">
+                          <span className="text-sm text-gray-600">Show:</span>
+                          <select
+                            value={itemsPerPage}
+                            onChange={handleItemsPerPageChange}
+                            className="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                          >
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                          </select>
+                          <span className="text-sm text-gray-600">per page</span>
+                        </div>
+
+                        {/* Results info */}
+                        <span className="text-sm text-gray-600">
+                          Showing {startIndex + 1} to {endIndex} of {filteredUsers.length} users
+                          {searchTerm && ' (filtered)'}
+                        </span>
+
+                        {/* Pagination Controls */}
+                        <div className="flex items-center space-x-2">
+                          {/* Previous Button */}
                           <button
-                            className="px-3 py-1 rounded border hover:bg-gray-100"
-                            disabled
+                            onClick={() => handlePageChange(currentPage - 1)}
+                            disabled={currentPage === 1}
+                            className="px-3 py-1 rounded border hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <ChevronLeft className="w-5 h-5" />
                           </button>
-                          <span className="text-sm text-gray-700">Page 1 of 1</span>
+
+                          {/* Page Numbers */}
+                          <div className="flex items-center space-x-1">
+                            {getPageNumbers().map((page, index) => (
+                              page === '...' ? (
+                                <span key={`ellipsis-${index}`} className="px-2 text-gray-500">...</span>
+                              ) : (
+                                <button
+                                  key={page}
+                                  onClick={() => handlePageChange(page)}
+                                  className={`px-3 py-1 rounded text-sm font-medium ${currentPage === page 
+                                    ? 'bg-emerald-500 text-white' 
+                                    : 'border text-gray-700 hover:bg-gray-100'
+                                  }`}
+                                >
+                                  {page}
+                                </button>
+                              )
+                            ))}
+                          </div>
+
+                          {/* Next Button */}
                           <button
-                            className="px-3 py-1 rounded border hover:bg-gray-100"
-                            disabled
+                            onClick={() => handlePageChange(currentPage + 1)}
+                            disabled={currentPage === totalPages}
+                            className="px-3 py-1 rounded border hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <ChevronRight className="w-5 h-5" />
                           </button>
                         </div>
+                      </div>
+
+                      {/* Page Info */}
+                      <div className="mt-4 text-center sm:text-left">
+                        <span className="text-sm text-gray-700">
+                          Page {currentPage} of {totalPages}
+                        </span>
                       </div>
                     </div>
                   </>
