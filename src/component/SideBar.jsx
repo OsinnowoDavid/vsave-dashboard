@@ -100,9 +100,10 @@ const Sidebar = ({ isOpen, onClose }) => {
   const navItems = [
     // { id: 'dashboard', icon: Home, title: 'Dashboard', subtitle: 'Overview', page: "/dashboard" },
     { id: 'savings', icon: Moon, title: 'Dashboard', subtitle: 'Overview ', page: "/over-view" },
+    { id: 'loan', icon: Receipt, title: 'Loan Management', subtitle: 'Loans & repayments', page: "/loans" },
+
     { id: 'savings', icon: PiggyBank, title: 'Savings Management', subtitle: 'Manage savings', page: "/manageSavings" },
     { id: 'wallet', icon: Wallet, title: 'Wallet Management', subtitle: 'Transactions & balance', page: "/WalletManagement" },
-    { id: 'loan', icon: Receipt, title: 'Loan Management', subtitle: 'Loans & repayments', page: "/loans" },
     { id: 'analysis', icon: BarChart3, title: 'Wait list', subtitle: 'Insights & analytics', page: "/get-wait-list" },
     { id: 'branch', icon: Building2, title: 'Branch Management', subtitle: 'Manage branches', page: "/branches" },
     { id: 'account', icon: Users, title: 'Account Management', subtitle: 'User accounts', page: "/admin-details" },

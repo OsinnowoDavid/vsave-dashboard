@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wallet, ArrowDownToLine, Smartphone, Receipt, TrendingUp, CreditCard, Search, ChevronDown, Eye, Loader2, AlertCircle, Users, Calendar } from 'lucide-react';
+import { Wallet, ArrowDownToLine, Smartphone, Receipt, TrendingUp, CreditCard, Search, ChevronDown, Eye, Loader2, AlertCircle, Users, Calendar, FileDown } from 'lucide-react';
 import NavBar from "../component/NavBar";
 import Sidebar from '../component/SideBar';
 import { getData, GetUsers } from '../api/admin';
@@ -58,6 +58,7 @@ const OverView = () => {
   const [error, setError] = useState(null);
   const [apiData, setApiData] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [exporting, setExporting] = useState(false);
 
   // Fetch dashboard stats data
   const fetchData = async () => {
@@ -66,6 +67,7 @@ const OverView = () => {
       setError(null);
       
       const response = await getData();
+      console.log("dashboard", response)
       
       if (response && response.data && response.data.data) {
         const apiStats = response.data.data;
@@ -152,6 +154,7 @@ const OverView = () => {
     try {
       setUsersLoading(true);
       const response = await GetUsers();
+      console.log("user",response)
 
       
       // Check different possible response structures
@@ -177,8 +180,8 @@ const OverView = () => {
         email: user.email || 'No email',
         phoneNumber: user.phoneNumber || 'No phone',
         dateJoined: user.createdAt ? formatDate(user.createdAt) : 'N/A',
-        status: 'active' ,// Default status - you might have this in your API
-        ballance:user.availableBalance
+        status: 'active', // Default status - you might have this in your API
+        balance: user.availableBalance || 0
       }));
       
       setUsers(transformedUsers);
@@ -217,6 +220,73 @@ const OverView = () => {
     } catch (error) {
       return 'Invalid Date';
     }
+  };
+
+  // Export users to CSV
+  const exportToCSV = (data, filename = 'users_export.csv') => {
+    setExporting(true);
+    
+    try {
+      // Prepare CSV headers
+      const headers = ['ID', 'User ID', 'Full Name', 'Email', 'Phone Number', 'Date Joined', 'Balance'];
+      
+      // Prepare CSV rows
+      const csvRows = [
+        headers.join(','),
+        ...data.map(user => [
+          user.id,
+          `"${user.userId}"`,
+          `"${user.fullName}"`,
+          `"${user.email}"`,
+          `"${user.phoneNumber}"`,
+          `"${user.dateJoined}"`,
+          user.balance
+        ].join(','))
+      ];
+      
+      // Create CSV content
+      const csvContent = csvRows.join('\n');
+      
+      // Create a blob and download link
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      // Clean up
+      URL.revokeObjectURL(url);
+      
+    } catch (error) {
+      console.error('Error exporting CSV:', error);
+      alert('Failed to export data. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // Export filtered users
+  const handleExportFiltered = () => {
+    if (filteredUsers.length === 0) {
+      alert('No users to export. Please check your search filters.');
+      return;
+    }
+    exportToCSV(filteredUsers, `filtered_users_${new Date().toISOString().split('T')[0]}.csv`);
+  };
+
+  // Export all users
+  const handleExportAll = () => {
+    if (users.length === 0) {
+      alert('No users to export.');
+      return;
+    }
+    exportToCSV(users, `all_users_${new Date().toISOString().split('T')[0]}.csv`);
   };
 
   // Filter users based on search term
@@ -318,23 +388,7 @@ const OverView = () => {
                     value={users.length}
                     details={[]}
                   />
-                  {/* <StatCard 
-                    icon={TrendingUp}
-                    iconBg="rgba(239, 68, 68, 0.17)"
-                    iconColor="#EF4444"
-                    label="Active Today"
-                    value="15"
-                    details={[]}
-                  /> */}
-                  {/* <StatCard 
-                    icon={CreditCard}
-                    iconBg="rgba(245, 158, 11, 0.17)"
-                    iconColor="#F59E0B"
-                    label="New This Week"
-                    value="8"
-                    details={[]}
-                  /> */}
-               
+                  {/* Additional stat cards can be added here */}
                 </div>
               </section>
             </div>
@@ -368,6 +422,39 @@ const OverView = () => {
                   </div>
                   
                   <div className="flex items-center gap-3">
+                    {/* Export Buttons */}
+                    <div className="relative group">
+                      <button 
+                        className="border border-emerald-500 bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={handleExportFiltered}
+                        disabled={exporting || filteredUsers.length === 0}
+                      >
+                        {exporting ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <FileDown className="w-4 h-4" />
+                        )}
+                        <span>Export Filtered ({filteredUsers.length})</span>
+                      </button>
+                      <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
+                        Export current search results
+                      </div>
+                    </div>
+
+                    <div className="relative group">
+                      <button 
+                        className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={handleExportAll}
+                        disabled={exporting || users.length === 0}
+                      >
+                        <FileDown className="w-4 h-4" />
+                        <span>Export All</span>
+                      </button>
+                      <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block bg-gray-800 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
+                        Export all {users.length} users
+                      </div>
+                    </div>
+
                     <button 
                       className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 flex items-center space-x-2"
                       onClick={fetchUsers}
@@ -407,7 +494,6 @@ const OverView = () => {
                       <table className="min-w-full divide-y divide-gray-200">
                         <thead className="bg-gray-50">
                           <tr>
-                            
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                               Full Name
                             </th>
@@ -421,14 +507,13 @@ const OverView = () => {
                               Date Joined
                             </th>
                             <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                              Ballance
+                              Balance
                             </th>
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
                           {filteredUsers.reverse().map((user) => (
                             <tr key={user.id} className="hover:bg-gray-50 transition-colors duration-150">
-                              
                               <td className="px-6 py-4 whitespace-nowrap">
                                 <div className="flex items-center">
                                   <div className="flex-shrink-0 h-8 w-8 bg-gradient-to-br from-emerald-500 to-green-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
@@ -461,8 +546,7 @@ const OverView = () => {
                               </td>
                               <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <div>
-                                 {/* <Calendar className="w-4 h-4 mr-2 text-gray-400" /> */}
-                                  {user.ballance}
+                                  ₦{formatNumber(user.balance)}
                                 </div>
                               </td>
                             </tr>
@@ -505,7 +589,5 @@ const OverView = () => {
     </div>
   );
 };
-
-// Import missing icons
 
 export default OverView;
