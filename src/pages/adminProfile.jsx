@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Header from '../component/NavBar';
 import Sidebar from '../component/SideBar';
 import { 
@@ -24,7 +24,8 @@ import {
   Key,
   MapPin,
   Check,
-  AlertTriangle
+  AlertTriangle,
+  FileDown
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { getAllAdmin, deleteAdmin, updateAdmin, createAdmin } from '../api/admin';
@@ -48,6 +49,8 @@ function AdminDetails() {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
   const [addLoading, setAddLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportFormat, setExportFormat] = useState('csv'); // 'csv' or 'excel'
 
   // Form states
   const [editForm, setEditForm] = useState({
@@ -267,79 +270,45 @@ function AdminDetails() {
     setShowDeleteModal(true);
   };
 
-  // Handle region selection for forms
-  // const handleRegionSelect = (region, formType = 'edit') => {
-  //   if (formType === 'edit') {
-  //     setEditForm(prev => ({
-  //       ...prev,
-  //       region: prev.region.includes(region)
-  //         ? prev.region.filter(r => r !== region)
-  //         : [...prev.region, region]
-  //     }));
-  //   } else {
-  //     setAddForm(prev => ({
-  //       ...prev,
-  //       region: prev.region.includes(region)
-  //         ? prev.region.filter(r => r !== region)
-  //         : [...prev.region, region]
-  //     }));
-  //   }
-  // };
-
-  // Handle subregion selection for forms
-  // const handleSubRegionSelect = (subRegion, formType = 'edit') => {
-  //   if (formType === 'edit') {
-  //     setEditForm(prev => ({
-  //       ...prev,
-  //       subRegion: prev.subRegion.includes(subRegion)
-  //         ? prev.subRegion.filter(sr => sr !== subRegion)
-  //         : [...prev.subRegion, subRegion]
-  //     }));
-  //   } else {
-  //     setAddForm(prev => ({
-  //       ...prev,
-  //       subRegion: prev.subRegion.includes(subRegion)
-  //         ? prev.subRegion.filter(sr => sr !== subRegion)
-  //         : [...prev.subRegion, subRegion]
-  //     }));
-  //   }
-  // };
-
   // Filter and search logic
-  const filteredAdmins = admins.filter(admin => {
-    const matchesSearch = 
-      (admin.firstName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (admin.lastName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (admin.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-      (admin.phoneNumber || '').includes(searchTerm);
-    
-    const matchesRole = filterRole === 'all' || admin.role === filterRole;
-    const matchesStatus = filterStatus === 'all' || admin.status === filterStatus;
-    
-    return matchesSearch && matchesRole && matchesStatus;
-  });
+  const filteredAdmins = useMemo(() => {
+    return admins.filter(admin => {
+      const matchesSearch = 
+        (admin.firstName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (admin.lastName?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (admin.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+        (admin.phoneNumber || '').includes(searchTerm);
+      
+      const matchesRole = filterRole === 'all' || admin.role === filterRole;
+      const matchesStatus = filterStatus === 'all' || admin.status === filterStatus;
+      
+      return matchesSearch && matchesRole && matchesStatus;
+    });
+  }, [admins, searchTerm, filterRole, filterStatus]);
 
   // Sorting logic
-  const sortedAdmins = [...filteredAdmins].sort((a, b) => {
-    if (sortConfig.key === 'name') {
-      const nameA = `${a.firstName || ''} ${a.lastName || ''}`;
-      const nameB = `${b.firstName || ''} ${b.lastName || ''}`;
-      return sortConfig.direction === 'asc' 
-        ? nameA.localeCompare(nameB)
-        : nameB.localeCompare(nameA);
-    }
-    
-    const aValue = a[sortConfig.key] || '';
-    const bValue = b[sortConfig.key] || '';
-    
-    if (aValue < bValue) {
-      return sortConfig.direction === 'asc' ? -1 : 1;
-    }
-    if (aValue > bValue) {
-      return sortConfig.direction === 'asc' ? 1 : -1;
-    }
-    return 0;
-  });
+  const sortedAdmins = useMemo(() => {
+    return [...filteredAdmins].sort((a, b) => {
+      if (sortConfig.key === 'name') {
+        const nameA = `${a.firstName || ''} ${a.lastName || ''}`;
+        const nameB = `${b.firstName || ''} ${b.lastName || ''}`;
+        return sortConfig.direction === 'asc' 
+          ? nameA.localeCompare(nameB)
+          : nameB.localeCompare(nameA);
+      }
+      
+      const aValue = a[sortConfig.key] || '';
+      const bValue = b[sortConfig.key] || '';
+      
+      if (aValue < bValue) {
+        return sortConfig.direction === 'asc' ? -1 : 1;
+      }
+      if (aValue > bValue) {
+        return sortConfig.direction === 'asc' ? 1 : -1;
+      }
+      return 0;
+    });
+  }, [filteredAdmins, sortConfig]);
 
   // Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage;
@@ -397,11 +366,179 @@ function AdminDetails() {
     }
   };
 
+  // Format date for CSV (YYYY-MM-DD HH:MM)
+  const formatDateForCSV = (dateString) => {
+    if (!dateString) return 'N/A';
+    
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-CA') + ' ' + date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+    } catch (error) {
+      return 'N/A';
+    }
+  };
+
   // Truncate long text
   const truncateText = (text, maxLength = 30) => {
     if (!text) return 'N/A';
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
+  };
+
+  // CSV Export Function
+  const handleExport = () => {
+    try {
+      setExporting(true);
+      
+      // Ask user what to export
+      const exportChoice = window.confirm(
+        'What would you like to export?\n\n' +
+        'Click "OK" to export filtered admins (current view)\n' +
+        'Click "Cancel" to export all admins'
+      );
+      
+      const dataToExport = exportChoice ? sortedAdmins : admins;
+      const exportType = exportChoice ? 'filtered' : 'all';
+      
+      if (dataToExport.length === 0) {
+        setError(`No ${exportType} admin data to export`);
+        setExporting(false);
+        return;
+      }
+      
+      // Define CSV headers
+      const headers = [
+        'Admin ID',
+        'First Name',
+        'Last Name',
+        'Email',
+        'Phone Number',
+        'Role',
+        'Status',
+        'Regions',
+        'Sub-Regions',
+        'Created At',
+        'Last Login'
+      ];
+      
+      // Convert data to CSV rows
+      const csvRows = dataToExport.map(admin => {
+        return [
+          `"${admin._id || ''}"`,
+          `"${admin.firstName || ''}"`,
+          `"${admin.lastName || ''}"`,
+          `"${admin.email || ''}"`,
+          `"${admin.phoneNumber || ''}"`,
+          `"${admin.role || 'N/A'}"`,
+          `"${admin.status || 'active'}"`,
+          `"${Array.isArray(admin.region) ? admin.region.join(', ') : 'N/A'}"`,
+          `"${Array.isArray(admin.subRegion) ? admin.subRegion.join(', ') : 'N/A'}"`,
+          `"${formatDateForCSV(admin.createdAt)}"`,
+          `"${formatDateForCSV(admin.lastLogin)}"`
+        ];
+      });
+      
+      // Combine headers and rows
+      const csvContent = [
+        headers.join(','),
+        ...csvRows.map(row => row.join(','))
+      ].join('\n');
+      
+      // Create and download the CSV file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const timestamp = new Date().toISOString().split('T')[0];
+      link.download = `${exportType}_admins_${timestamp}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      // Show success message
+      setSuccess(`Successfully exported ${dataToExport.length} admins to CSV`);
+      setTimeout(() => setSuccess(''), 5000);
+      
+      console.log(`Exported ${dataToExport.length} ${exportType} admins to CSV`);
+      
+    } catch (error) {
+      console.error('Export error:', error);
+      setError('Failed to export admin data. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  // Quick export function for filtered admins
+  const handleQuickExport = () => {
+    if (sortedAdmins.length === 0) {
+      setError('No admins to export');
+      return;
+    }
+    
+    try {
+      // Define CSV headers
+      const headers = [
+        'Admin ID',
+        'Name',
+        'Email',
+        'Phone',
+        'Role',
+        'Status',
+        'Regions',
+        'Sub-Regions',
+        'Created Date',
+        'Last Login'
+      ];
+      
+      // Convert data to CSV rows
+      const csvRows = sortedAdmins.map(admin => {
+        const fullName = `${admin.firstName || ''} ${admin.lastName || ''}`.trim();
+        
+        return [
+          `"${admin._id || ''}"`,
+          `"${fullName || 'N/A'}"`,
+          `"${admin.email || ''}"`,
+          `"${admin.phoneNumber || ''}"`,
+          `"${admin.role || 'N/A'}"`,
+          `"${admin.status || 'active'}"`,
+          `"${Array.isArray(admin.region) ? admin.region.join(', ') : 'N/A'}"`,
+          `"${Array.isArray(admin.subRegion) ? admin.subRegion.join(', ') : 'N/A'}"`,
+          `"${formatDateForCSV(admin.createdAt)}"`,
+          `"${formatDateForCSV(admin.lastLogin)}"`
+        ];
+      });
+      
+      // Combine headers and rows
+      const csvContent = [
+        headers.join(','),
+        ...csvRows.map(row => row.join(','))
+      ].join('\n');
+      
+      // Create and download the CSV file
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `admins_export_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      // Show success message
+      setSuccess(`Successfully exported ${sortedAdmins.length} admins to CSV`);
+      setTimeout(() => setSuccess(''), 5000);
+      
+    } catch (error) {
+      console.error('Quick export error:', error);
+      setError('Failed to export admins');
+    }
   };
 
   // Loading state
@@ -440,6 +577,23 @@ function AdminDetails() {
               </div>
               <div className="mt-4 md:mt-3 flex flex-wrap gap-3">
                 <button
+                  onClick={handleExport}
+                  disabled={exporting}
+                  className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 px-4 py-2.5 rounded-lg font-medium flex items-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {exporting ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <span>Exporting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-5 h-5" />
+                      <span>Export CSV</span>
+                    </>
+                  )}
+                </button>
+                <button
                   onClick={() => setShowAddModal(true)}
                   className="bg-black hover:bg-green-600 text-white0 text-white px-4 py-2.5 rounded-lg font-medium flex items-center space-x-2 shadow-lg hover:shadow-xl transition-all duration-200"
                 >
@@ -468,6 +622,12 @@ function AdminDetails() {
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center animate-fadeIn">
                 <AlertCircle className="h-5 w-5 text-red-500 mr-3" />
                 <span className="text-red-700 font-medium">{error}</span>
+                <button 
+                  onClick={() => setError(null)}
+                  className="ml-auto text-red-500 hover:text-red-700"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
             )}
 
@@ -639,19 +799,6 @@ function AdminDetails() {
                             )}
                           </div>
                         </th>
-                        {/* <th 
-                          className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
-                          onClick={() => handleSort('status')}
-                        > */}
-                          {/* <div className="flex items-center space-x-1">
-                            <span>Status</span>
-                            {sortConfig.key === 'status' && (
-                              <span className="text-gray-400">
-                                {sortConfig.direction === 'asc' ? '↑' : '↓'}
-                              </span>
-                            )}
-                          </div> */}
-                        {/* </th> */}
                         <th 
                           className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider cursor-pointer hover:bg-gray-100 transition-colors duration-150"
                           onClick={() => handleSort('lastLogin')}
@@ -739,11 +886,6 @@ function AdminDetails() {
                               {admin.role || 'N/A'}
                             </span>
                           </td>
-                          {/* <td className="px-6 py-4">
-                            <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusBadgeClass(admin.status)}`}>
-                              {(admin.status || 'active').charAt(0).toUpperCase() + (admin.status || 'active').slice(1)}
-                            </span>
-                          </td> */}
                           <td className="px-6 py-4">
                             <div className="flex items-center text-sm text-gray-600">
                               <Calendar className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
@@ -752,16 +894,6 @@ function AdminDetails() {
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center space-x-2">
-                              {/* <button
-                                onClick={() => {
-                                  setSelectedAdmin(admin);
-                                  setShowDetailsModal(true);
-                                }}
-                                className="text-blue-600 hover:text-blue-800 p-1.5 rounded-lg hover:bg-blue-50 transition-colors duration-150"
-                                title="View Details"
-                              >
-                                <Eye className="w-5 h-5" />
-                              </button> */}
                               <button
                                 onClick={() => openEditModal(admin)}
                                 className="text-emerald-600 hover:text-emerald-800 p-1.5 rounded-lg hover:bg-emerald-50 transition-colors duration-150"
@@ -968,58 +1100,6 @@ function AdminDetails() {
                     </select>
                   </div>
                 </div>
-
-                {/* Regions Selection */}
-                {/* <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Regions
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {regions.map((region) => (
-                      <button
-                        key={region}
-                        type="button"
-                        onClick={() => handleRegionSelect(region)}
-                        className={`px-3 py-1.5 rounded-full text-sm transition-colors duration-200 flex items-center ${
-                          editForm.region.includes(region)
-                            ? 'bg-emerald-100 text-emerald-800 border border-emerald-300 shadow-sm'
-                            : 'bg-gray-100 text-gray-800 border border-gray-300 hover:bg-gray-200'
-                        }`}
-                      >
-                        {region}
-                        {editForm.region.includes(region) && (
-                          <Check className="w-3 h-3 ml-1.5 inline" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div> */}
-
-                {/* Sub-regions Selection */}
-                {/* <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Sub-regions
-                  </label>
-                  <div className="flex flex-wrap gap-2">
-                    {subRegions.map((subRegion) => (
-                      <button
-                        key={subRegion}
-                        type="button"
-                        onClick={() => handleSubRegionSelect(subRegion)}
-                        className={`px-3 py-1.5 rounded-full text-sm transition-colors duration-200 flex items-center ${
-                          editForm.subRegion.includes(subRegion)
-                            ? 'bg-indigo-100 text-indigo-800 border border-indigo-300 shadow-sm'
-                            : 'bg-gray-100 text-gray-800 border border-gray-300 hover:bg-gray-200'
-                        }`}
-                      >
-                        {subRegion}
-                        {editForm.subRegion.includes(subRegion) && (
-                          <Check className="w-3 h-3 ml-1.5 inline" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div> */}
 
                 <div className="flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-200">
                   <button
