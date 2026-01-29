@@ -105,7 +105,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     { id: 'savings', icon: PiggyBank, title: 'Savings Management', subtitle: 'Manage savings', page: "/manageSavings" },
     { id: 'wallet', icon: Wallet, title: 'Wallet Management', subtitle: 'Transactions & balance', page: "/WalletManagement" },
     { id: 'analysis', icon: BarChart3, title: 'Wait list', subtitle: 'Insights & analytics', page: "/get-wait-list" },
-    { id: 'branch', icon: Building2, title: 'Branch Management', subtitle: 'Manage branches', page: "/branches" },
+    { id: 'branch', icon: Building2, title: 'Branch Management', subtitle: 'Manage branches', page: "/branch-management" },
     { id: 'account', icon: Users, title: 'Account Management', subtitle: 'User accounts', page: "/admin-details" },
     { id: 'settings', icon: Settings, title: 'Settings', subtitle: 'System settings', page: "/settings" },
   ];

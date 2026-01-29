@@ -22,6 +22,7 @@ import Settings from "./pages/Settings"
 import 'react-toastify/dist/ReactToastify.css';
 import LoanManagement from "./pages/LoanManagement"
 import SavingsManagement from "./pages/SavingsManagement"
+import BranchManagement from "./pages/branchManagement"
 function App() {
   const checkAuth = useAuthStore()
   console.log("auth", checkAuth)
@@ -61,6 +62,7 @@ function App() {
   <Route path="/WalletManagement"  element={ checkAuth.token ?(<WalletManagement/>) : (<NotAuthenticatedLoginPage/>)}/>
   <Route path="/over-view"  element={ checkAuth.token ?(<OverView/>) : (<NotAuthenticatedLoginPage/>)}/>
   <Route path="/loans"  element={ checkAuth.token ?(<LoanManagement/>) : (<NotAuthenticatedLoginPage/>)}/>
+  <Route path="/branch-management"  element={ checkAuth.token ?(<BranchManagement/>) : (<NotAuthenticatedLoginPage/>)}/>
     {/* 404 Route - MUST be at the end */}
         <Route path="*" element={<NotFound/>}/>
 </Routes>
