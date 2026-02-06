@@ -104,4 +104,46 @@ export const getAllteam = async () => {
     }
   }
 };
+
+export const getAllTeams = async () => {
+  try {
+    const response = await apiClient.get("/admin/get-all-team");
+    return response.data; // ✅ Consistent: returns data only
+  } catch (error) {
+    console.error("Error fetching team data:", error); // ✅ Better error message
+
+    if (error.response) {
+      throw {
+        message: error.response.data?.message || "Failed to fetch team data",
+        status: error.response.status,
+        data: error.response.data
+      };
+    } else if (error.request) {
+      throw new Error("No response from server. Please check your connection.");
+    } else {
+      throw new Error("Failed to fetch team data: " + error.message);
+    }
+  }
+};
+
+export const createMarket = async (marketForm) => {
+  try {
+    const response = await apiClient.post("/admin/create-agent", marketForm); // ✅ Added await
+    return response.data; // ✅ Consistent: returns data only
+  } catch (error) {
+    console.error("Error creating market:", error);
+
+    if (error.response) {
+      throw {
+        message: error.response.data?.message || "Failed to create market",
+        status: error.response.status,
+        data: error.response.data
+      };
+    } else if (error.request) {
+      throw new Error("No response from server. Please check your connection.");
+    } else {
+      throw new Error("Failed to create market: " + error.message);
+    }
+  }
+};
 // Removed duplicate getRegion function 

@@ -4,7 +4,7 @@ import Header from '../component/NavBar';
 import Sidebar from '../component/SideBar';
 import { getAllAdmin, createRegion, getRegion } from '../api/branchManagement';
 import { toast } from 'react-toastify';
-import { createTeam, getAllteam } from '../api/branchManagement';
+import { createTeam, getAllteam, getAllTeams, createMarket } from '../api/branchManagement';
 function BranchManagement() {
   // State management
   const [userRole, setUserRole] = useState('superadmin'); // superadmin, region-admin, team-leader
@@ -18,6 +18,7 @@ function BranchManagement() {
   const [onboardingChain, setOnboardingChain] = useState([]);
   const [admin, setAdmin] = useState([])
   const [mockRegions, setMockRegions] = useState([])
+  const [teamData, setTeamData] = useState([])
   // Form states
   const [regionForm, setRegionForm] = useState({
     email: '',
@@ -34,11 +35,15 @@ function BranchManagement() {
   });
 
   const [marketForm, setMarketForm] = useState({
-    teamId: '',
-    name: '',
-    location: '',
-    referralCode: '',
-    marketAdmin: ''
+    firstName: "",
+    lastName: "",
+    email: "",
+    phoneNumber: "",
+    gender: "",
+    dateOfBirth: "",
+    region: "",
+    team: "",
+    password: ""
   });
 
   const [userForm, setUserForm] = useState({
@@ -88,11 +93,23 @@ function BranchManagement() {
     }
   }
 
+  const getTeamDatas = async () => {
+    try {
+      const data = await getAllTeams();
+      setTeamData(data?.data);
+      console.log("TEAM", data);
+      return data;
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   // Sample data for demonstration
   useEffect(() => {
     getAdmin()
     getRegionData()
     getTeamData()
+    getTeamDatas()
     // Mock data
     // const mockReg  ions = [
     //   { id: 1, name: 'North Region', location: 'City A', admin: 'John Doe', teams: 5, createdAt: '2024-01-15' },
@@ -158,16 +175,26 @@ function BranchManagement() {
 
   };
 
-  const handleMarketSubmit = (e) => {
+  const handleMarketSubmit = async (e) => {
     e.preventDefault();
-    const newMarket = {
-      id: markets.length + 1,
-      ...marketForm,
-      users: 0
-    };
-    setMarkets([...markets, newMarket]);
-    setMarketForm({ teamId: '', name: '', location: '', referralCode: '', marketAdmin: '' });
-    alert('Market created successfully!');
+
+    try {
+      const response = await createMarket(marketForm)
+      console.log("CREATE-MARKET RESPONSE", response)
+      if (response.status === "success") {
+        toast.success(response.message)
+
+        setMarketForm({ teamId: '', name: '', location: '', referralCode: '', marketAdmin: '' });
+      }
+      else {
+        toast.error(response.message)
+      }
+    } catch (error) {
+      toast.error(error.message)
+      console.log(error)
+
+    }
+
   };
 
   const handleUserOnboarding = (e) => {
@@ -337,49 +364,127 @@ function BranchManagement() {
               <form onSubmit={handleMarketSubmit}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Market Name</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2"> First Name</label>
                     <input
                       type="text"
-                      value={marketForm.name}
-                      onChange={(e) => setMarketForm({ ...marketForm, name: e.target.value })}
+                      value={marketForm.firstName}
+                      onChange={(e) => setMarketForm({ ...marketForm, firstName: e.target.value })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                      placeholder="Enter market name"
+                      placeholder="Enter first name"
+                      required
+                    />
+                  </div>
+                  {/* second name */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Second name</label>
+                    <input
+                      type="text"
+                      value={marketForm.lastName}
+                      onChange={(e) => setMarketForm({ ...marketForm, lastName: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      placeholder="Enter second name"
+                      required
+                    />
+                  </div>
+                  {/* email */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input
+                      type="text"
+                      value={marketForm.email}
+                      onChange={(e) => setMarketForm({ ...marketForm, email: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      placeholder="Enter email"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Phone number</label>
                     <input
                       type="text"
-                      value={marketForm.location}
-                      onChange={(e) => setMarketForm({ ...marketForm, location: e.target.value })}
+                      value={marketForm.phoneNumber}
+                      onChange={(e) => setMarketForm({ ...marketForm, phoneNumber: e.target.value })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                      placeholder="Enter location"
+                      placeholder="Enter phone number"
                       required
                     />
                   </div>
+                  {/* gender */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Referral Code</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Gender</label>
                     <input
                       type="text"
-                      value={marketForm.referralCode}
-                      onChange={(e) => setMarketForm({ ...marketForm, referralCode: e.target.value })}
+                      value={marketForm.gender}
+                      onChange={(e) => setMarketForm({ ...marketForm, gender: e.target.value })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                      placeholder="Generate referral code"
+                      placeholder="Enter gender"
                       required
                     />
                   </div>
+                  {/* date of birth */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Market Admin</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Date of birth</label>
                     <input
                       type="text"
-                      value={marketForm.marketAdmin}
-                      onChange={(e) => setMarketForm({ ...marketForm, marketAdmin: e.target.value })}
+                      // calender
+                      value={marketForm.dateOfBirth}
+                      onChange={(e) => setMarketForm({ ...marketForm, dateOfBirth: e.target.value })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                      placeholder="Assign market admin"
+                      placeholder="Enter date of birth 02/10/1999"
                       required
                     />
                   </div>
+
+                  <div className="">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Region</label>
+                    <select
+                      value={marketForm.region}
+                      onChange={(e) => setMarketForm({ ...marketForm, region: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      required
+                    >
+                      <option value="" >Select a region</option>
+                      {mockRegions.map((region) => (
+                        <option key={region._id} value={region._id}>
+                          {region.regionName}
+                        </option>
+                      ))}
+                    </select>
+
+                  </div>
+
+                  <div className="">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">team</label>
+                    <select
+                      value={marketForm.team}
+                      onChange={(e) => setMarketForm({ ...marketForm, team: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      required
+                    >
+                      <option value="" >Select a Team</option>
+                      {teamData.map((team) => (
+                        <option key={team._id} value={team._id}>
+                          {team.subRegionName}
+                        </option>
+                      ))}
+                    </select>
+
+                  </div>
+                  {/* password */}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                    <input
+                      type="password"
+                      value={marketForm.password}
+                      onChange={(e) => setMarketForm({ ...marketForm, password: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                      placeholder="Enter password"
+                      required
+                    />
+                  </div>
+
+
                 </div>
                 <button
                   type="submit"
@@ -664,7 +769,7 @@ function BranchManagement() {
                   >
                     <option value="superadmin">Super Admin</option>
                     <option value="region-admin">Create team</option>
-                    <option value="team-leader">Team Leader</option>
+                    <option value="team-leader">Team Marker</option>
                   </select>
                 </div>
 
