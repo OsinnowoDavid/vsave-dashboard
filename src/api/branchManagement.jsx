@@ -146,4 +146,25 @@ export const createMarket = async (marketForm) => {
     }
   }
 };
+
+export const getAllMarkets = async () => {
+  try {
+    const response = await apiClient.get("/admin/get-all-agent");
+    return response.data; // ✅ Consistent: returns data only
+  } catch (error) {
+    console.error("Error fetching market data:", error); // ✅ Better error message
+
+    if (error.response) {
+      throw {
+        message: error.response.data?.message || "Failed to fetch market data",
+        status: error.response.status,
+        data: error.response.data
+      };
+    } else if (error.request) {
+      throw new Error("No response from server. Please check your connection.");
+    } else {
+      throw new Error("Failed to fetch market data: " + error.message);
+    }
+  }
+};
 // Removed duplicate getRegion function 

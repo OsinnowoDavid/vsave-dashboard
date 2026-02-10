@@ -4,7 +4,7 @@ import Header from '../component/NavBar';
 import Sidebar from '../component/SideBar';
 import { getAllAdmin, createRegion, getRegion } from '../api/branchManagement';
 import { toast } from 'react-toastify';
-import { createTeam, getAllteam, getAllTeams, createMarket } from '../api/branchManagement';
+import { createTeam, getAllteam, getAllTeams, createMarket, getAllMarkets } from '../api/branchManagement';
 function BranchManagement() {
   // State management
   const [userRole, setUserRole] = useState('superadmin'); // superadmin, region-admin, team-leader
@@ -104,12 +104,24 @@ function BranchManagement() {
     }
   };
 
+  const getMarketData = async () => {
+    try {
+      const data = await getAllMarkets();
+      setMarkets(data?.data);
+      console.log("MARKET", data);
+      return data;
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
   // Sample data for demonstration
   useEffect(() => {
     getAdmin()
     getRegionData()
     getTeamData()
     getTeamDatas()
+    getMarketData()
     // Mock data
     // const mockReg  ions = [
     //   { id: 1, name: 'North Region', location: 'City A', admin: 'John Doe', teams: 5, createdAt: '2024-01-15' },
@@ -121,10 +133,10 @@ function BranchManagement() {
     //   { id: 2, regionId: 1, title: 'Support Team Beta', location: 'District 2', email: 'beta@company.com', teamLeader: 'Sarah Williams', markets: 5 },
     // ];
 
-    const mockMarkets = [
-      { id: 1, teamId: 1, name: 'Downtown Market', location: 'Downtown Area', referralCode: 'DTM001', marketAdmin: 'Robert Chen', users: 45 },
-      { id: 2, teamId: 1, name: 'Uptown Market', location: 'Uptown Area', referralCode: 'UPM002', marketAdmin: 'Lisa Brown', users: 32 },
-    ];
+    // const mockMarkets = [
+    //   { id: 1, teamId: 1, name: 'Downtown Market', location: 'Downtown Area', referralCode: 'DTM001', marketAdmin: 'Robert Chen', users: 45 },
+    //   { id: 2, teamId: 1, name: 'Uptown Market', location: 'Uptown Area', referralCode: 'UPM002', marketAdmin: 'Lisa Brown', users: 32 },
+    // ];
 
     const mockChain = [
       { id: 1, user: 'User A', code: 'REF001', date: '2024-01-10', referredBy: 'Admin', referredCount: 5 },
@@ -134,7 +146,7 @@ function BranchManagement() {
 
     setRegions(mockRegions);
     // setTeams(mockTeams);
-    setMarkets(mockMarkets);
+    setMarkets(markets);
     setOnboardingChain(mockChain);
   }, []);
 
@@ -464,7 +476,7 @@ function BranchManagement() {
                       <option value="" >Select a Team</option>
                       {teamData.map((team) => (
                         <option key={team._id} value={team._id}>
-                          {team.subRegionName}
+                          {team.subRegionName} {" "} {team.region}
                         </option>
                       ))}
                     </select>
@@ -662,21 +674,21 @@ function BranchManagement() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-emerald-800 uppercase tracking-wider">Location</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-emerald-800 uppercase tracking-wider">Referral Code</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-emerald-800 uppercase tracking-wider">Admin</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-emerald-800 uppercase tracking-wider">Users</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-emerald-800 uppercase tracking-wider">Region</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {markets.map(market => (
                     <tr key={market.id} className="hover:bg-emerald-50 transition duration-150">
-                      <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{market.name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{market.firstName} {" "} {market.lastName}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-gray-700">{market.location}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <code className="px-2 py-1 text-sm bg-gray-100 rounded text-emerald-700">{market.referralCode}</code>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-700">{market.marketAdmin}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-700">{market.email}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-emerald-100 text-emerald-800">
-                          {market.users} Users
+                          {market.region}
                         </span>
                       </td>
                     </tr>
@@ -903,7 +915,7 @@ function BranchManagement() {
                     </svg>
                   </div>
                   <div>
-                    <p className="text-sm text-gray-600">Total Markets</p>
+                    <p className="text-sm text-gray-600">Total Marketer</p>
                     <p className="text-2xl font-bold text-emerald-800">{markets.length}</p>
                   </div>
                 </div>

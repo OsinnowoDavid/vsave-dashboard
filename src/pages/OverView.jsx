@@ -3,26 +3,26 @@ import { Wallet, ArrowDownToLine, Smartphone, Receipt, TrendingUp, CreditCard, S
 import NavBar from "../component/NavBar";
 import Sidebar from '../component/SideBar';
 import { getData, GetUsers } from '../api/admin';
-import { Mail, Phone, Edit, Trash2 ,ChevronLeft, ChevronRight} from 'lucide-react';
+import { Mail, Phone, Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 
 const StatCard = ({ icon: Icon, iconBg, iconColor, label, value, details }) => (
-  <article 
+  <article
     className="w-full bg-white rounded-xl sm:rounded-2xl shadow-sm sm:shadow-md px-4 sm:px-5 py-4 sm:py-5 transition-all duration-200 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] border border-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
     tabIndex="0"
     aria-label={`${label}: ${value}`}
   >
     <div className="flex items-start gap-3 sm:gap-4">
       {/* Icon Container */}
-      <div 
+      <div
         className="flex-shrink-0 w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center"
         style={{ backgroundColor: iconBg }}
         aria-hidden="true"
       >
-        <Icon 
-          size={20} 
-          className="sm:w-6 sm:h-6" 
-          style={{ color: iconColor }} 
+        <Icon
+          size={20}
+          className="sm:w-6 sm:h-6"
+          style={{ color: iconColor }}
         />
       </div>
 
@@ -34,7 +34,7 @@ const StatCard = ({ icon: Icon, iconBg, iconColor, label, value, details }) => (
         <p className="text-lg sm:text-xl font-semibold text-gray-900 leading-tight truncate">
           {value}
         </p>
-        
+
         {/* Details */}
         {details?.length > 0 && (
           <div className="flex flex-col gap-1 mt-1">
@@ -59,7 +59,7 @@ const OverView = () => {
   const [apiData, setApiData] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [exporting, setExporting] = useState(false);
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -69,14 +69,19 @@ const OverView = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await getData();
       console.log("dashboard", response)
-      
+
+      // Check for backend error response
+      if (response && response.data && response.data.status === 'Failed') {
+        throw new Error(response.data.message || 'Backend returned failed status');
+      }
+
       if (response && response.data && response.data.data) {
         const apiStats = response.data.data;
         setApiData(apiStats);
-        
+
         // Format the stats for display
         const formattedStats = [
           {
@@ -107,16 +112,16 @@ const OverView = () => {
             details: []
           },
         ];
-        
+
         setStats(formattedStats);
       } else {
         throw new Error('Invalid API response structure');
       }
-      
+
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       setError(error.message || 'Failed to load dashboard data');
-      
+
       // Fallback to default stats if API fails
       const defaultStats = [
         {
@@ -158,12 +163,20 @@ const OverView = () => {
     try {
       setUsersLoading(true);
       const response = await GetUsers();
-      console.log("user", response)
+      // console.log("user", response)
 
-      
+      // Check for backend error response
+      if (response && response.status === 'Failed') {
+        const errorMessage = response.message || 'Failed to load users';
+        console.error('Backend reported error:', errorMessage);
+        toast.error(errorMessage);
+        setUsers([]);
+        return;
+      }
+
       // Check different possible response structures
       let usersData = [];
-      
+
       if (response && response.data && Array.isArray(response.data)) {
         // If response has data property with array
         usersData = response.data;
@@ -173,9 +186,9 @@ const OverView = () => {
       } else if (response && response.data && Array.isArray(response.data.data)) {
         // If response has data.data structure
         usersData = response.data.data;
-        
+
       }
-      
+
       // Transform API data to match our table structure
       const transformedUsers = usersData.map((user, index) => ({
         id: user._id || index + 1,
@@ -187,11 +200,12 @@ const OverView = () => {
         status: 'active', // Default status - you might have this in your API
         balance: user.availableBalance || 0
       }));
-      
+
       setUsers(transformedUsers);
-      
+
     } catch (error) {
       console.error('Error fetching users:', error);
+      toast.error(error.message || 'Failed to fetch users');
       // Don't set error state for users to not block the whole dashboard
     } finally {
       setUsersLoading(false);
@@ -214,7 +228,7 @@ const OverView = () => {
   // Helper function to format dates
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
-    
+
     try {
       return new Date(dateString).toLocaleDateString('en-NG', {
         year: 'numeric',
@@ -261,7 +275,7 @@ const OverView = () => {
   const getPageNumbers = () => {
     const pageNumbers = [];
     const maxVisiblePages = 5;
-    
+
     if (totalPages <= maxVisiblePages) {
       // Show all pages
       for (let i = 1; i <= totalPages; i++) {
@@ -294,18 +308,18 @@ const OverView = () => {
         pageNumbers.push(totalPages);
       }
     }
-    
+
     return pageNumbers;
   };
 
   // Export users to CSV
   const exportToCSV = (data, filename = 'users_export.csv') => {
     setExporting(true);
-    
+
     try {
       // Prepare CSV headers
       const headers = ['ID', 'User ID', 'Full Name', 'Email', 'Phone Number', 'Date Joined', 'Balance'];
-      
+
       // Prepare CSV rows
       const csvRows = [
         headers.join(','),
@@ -319,10 +333,10 @@ const OverView = () => {
           user.balance
         ].join(','))
       ];
-      
+
       // Create CSV content
       const csvContent = csvRows.join('\n');
-      
+
       // Create a blob and download link
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -330,15 +344,15 @@ const OverView = () => {
       link.setAttribute('href', url);
       link.setAttribute('download', filename);
       link.style.visibility = 'hidden';
-      
+
       // Trigger download
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       // Clean up
       URL.revokeObjectURL(url);
-      
+
     } catch (error) {
       console.error('Error exporting CSV:', error);
       alert('Failed to export data. Please try again.');
@@ -394,14 +408,14 @@ const OverView = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <NavBar />
-      
+
       {/* Main layout container */}
       <div className="flex pt-16">
         {/* Sidebar with fixed positioning */}
         <div className="fixed left-0 top-5 h-[calc(100vh-4rem)] z-30">
           <Sidebar />
         </div>
-        
+
         {/* Main content area with left margin for sidebar */}
         <main className="flex-1 ml-72 min-h-screen">
           <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-8 lg:pt-10 pb-6 sm:pb-8 lg:pb-12">
@@ -445,7 +459,7 @@ const OverView = () => {
               <section aria-labelledby="user-stats">
                 <h2 id="user-stats" className="sr-only">User Statistics</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-8">
-                  <StatCard 
+                  <StatCard
                     icon={Users}
                     iconBg="rgba(16, 185, 129, 0.17)"
                     iconColor="#10B981"
@@ -488,11 +502,11 @@ const OverView = () => {
                       />
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-3">
                     {/* Reset Search Button */}
                     {searchTerm && (
-                      <button 
+                      <button
                         className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 flex items-center space-x-2"
                         onClick={handleResetSearch}
                       >
@@ -502,7 +516,7 @@ const OverView = () => {
 
                     {/* Export Buttons */}
                     <div className="relative group">
-                      <button 
+                      <button
                         className="border border-emerald-500 bg-emerald-500 text-white px-4 py-2 rounded-lg hover:bg-emerald-600 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={handleExportFiltered}
                         disabled={exporting || filteredUsers.length === 0}
@@ -520,7 +534,7 @@ const OverView = () => {
                     </div>
 
                     <div className="relative group">
-                      <button 
+                      <button
                         className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={handleExportAll}
                         disabled={exporting || users.length === 0}
@@ -533,7 +547,7 @@ const OverView = () => {
                       </div>
                     </div>
 
-                    <button 
+                    <button
                       className="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 flex items-center space-x-2"
                       onClick={() => {
                         fetchUsers();
@@ -564,8 +578,8 @@ const OverView = () => {
                     <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No users found</h3>
                     <p className="text-gray-500">
-                      {searchTerm 
-                        ? 'No users match your search criteria' 
+                      {searchTerm
+                        ? 'No users match your search criteria'
                         : 'No user accounts have been created yet'}
                     </p>
                   </div>
@@ -682,10 +696,10 @@ const OverView = () => {
                                 <button
                                   key={page}
                                   onClick={() => handlePageChange(page)}
-                                  className={`px-3 py-1 rounded text-sm font-medium ${currentPage === page 
-                                    ? 'bg-emerald-500 text-white' 
+                                  className={`px-3 py-1 rounded text-sm font-medium ${currentPage === page
+                                    ? 'bg-emerald-500 text-white'
                                     : 'border text-gray-700 hover:bg-gray-100'
-                                  }`}
+                                    }`}
                                 >
                                   {page}
                                 </button>
